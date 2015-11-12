@@ -247,6 +247,7 @@
 		<!-- Keep in alphabetical order ;) -->
 		
 		<build-addon name="ascanrules" />
+		<build-addon name="byPassModule"/>
 		<build-addon name="coreLang" />
 		<build-addon name="directorylistv1" />
 		<build-addon name="directorylistv2_3" />
@@ -303,6 +304,10 @@
 
 	<target name="generate-wiki-ascanrules" description="Generates the wiki of active scan rules">
 		<generate-wiki-core addon="ascanrules" />
+	</target>
+	
+	<target name="deploy-byPassModule" description="deploy the active byPassModule">
+			<build-deploy-addon name="byPassModule" />
 	</target>
 
 	<target name="deploy-coreLang" description="deploy the  add-on">
