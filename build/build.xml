@@ -327,6 +327,10 @@
 	<target name="generate-wiki-browserView" description="Generates the wiki of browser extension">
 		<generate-wiki addon="browserView" />
 	</target>
+	
+	<target name="deploy-byPassModule" description="deploy the byPassModule extension">
+		<build-deploy-addon name="byPassModule" />
+	</target>
 
 	<target name="deploy-callgraph" description="deploy the callgraph extension">
 		<build-deploy-addon name="callgraph" />
