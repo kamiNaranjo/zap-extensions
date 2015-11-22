@@ -1,0 +1,16 @@
+<zapaddon>
+	<name>ByPass Module</name>
+	<version>2</version>
+	<description>._."</description>
+	<author>ZAP Dev Team</author>
+	<url></url>
+	<changes>Updated for ZAP 2.4</changes>
+	<extensions>
+		<extension>org.zaproxy.zap.extension.byPassModule.ExtensionByPass</extension>
+	</extensions>
+	<ascanrules/>
+	<pscanrules/>
+	<filters/>
+	<not-before-version>2.4.0</not-before-version>
+	<not-from-version/>
+</zapaddon>
