@@ -48,6 +48,8 @@ public class HttpMessageSelectorPanel implements MessageSelectorPanel<HttpMessag
     private final JPanel panel;
     private final JTree messagesTree;
     private final DefaultTreeModel messagesTreeModel;
+    private SiteNode sitieSelect;
+    private boolean haveChild;
 
     private HttpMessage selectedHttpMessage;
 
@@ -97,7 +99,13 @@ public class HttpMessageSelectorPanel implements MessageSelectorPanel<HttpMessag
         SiteNode node = (SiteNode) messagesTree.getLastSelectedPathComponent();
         if (node != null && node.getParent() != null) {
             try {
+            	if(!node.isLeaf())
+            		setHaveChild(true);
+            	else
+            		setHaveChild(false);
+            	setSitieSelect(node);
                 selectedHttpMessage = ((SiteNode) node.getUserObject()).getHistoryReference().getHttpMessage();
+                
                 return true;
             } catch (HttpMalformedHeaderException | DatabaseException e) {
                 LOGGER.error("Failed to read the message: ", e);
@@ -128,5 +136,25 @@ public class HttpMessageSelectorPanel implements MessageSelectorPanel<HttpMessag
     public String getHelpTarget() {
         return null;
     }
+
+	public boolean isHaveChild() {
+		return haveChild;
+	}
+
+	public void setHaveChild(boolean haveChild) {
+		this.haveChild = haveChild;
+	}
+
+	public SiteNode getSitieSelect() {
+		return sitieSelect;
+	}
+
+	public void setSitieSelect(SiteNode sitieSelect) {
+		this.sitieSelect = sitieSelect;
+	}
+	
+	public JTree getMessagesTree(){
+		return messagesTree;
+	}
 
 }

@@ -1,8 +1,8 @@
 <zapaddon>
 	<name>ByPass Module</name>
-	<version>2</version>
-	<description>._."</description>
-	<author>ZAP Dev Team</author>
+	<version>1</version>
+	<description>Module for doing byPass deleting cookies</description>
+	<author>Proyecto integrador</author>
 	<url></url>
 	<changes>Updated for ZAP 2.4</changes>
 	<extensions>

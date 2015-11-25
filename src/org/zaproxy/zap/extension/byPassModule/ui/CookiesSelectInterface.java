@@ -15,6 +15,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
+import org.parosproxy.paros.network.HtmlParameter;
 import org.zaproxy.zap.extension.byPassModule.ByPassModule;
 import org.zaproxy.zap.extension.byPassModule.ExtensionByPass;
 import org.zaproxy.zap.view.AbstractFormDialog;
@@ -26,12 +27,12 @@ public class CookiesSelectInterface extends AbstractFormDialog{
 	private JPanel mainPanel;
 	private JButton acceptButton;
 	private JLabel topLabel;
-	private List<String> cookies;
+	private List<HtmlParameter> cookies;
 	private JPanel checkBoxPanel;
 	
-	public CookiesSelectInterface(JFrame owner, List<String> cookiesName) {
+	public CookiesSelectInterface(JFrame owner, List<HtmlParameter> cookieArray) {
 		super(owner, ExtensionByPass.getMessageString("title.windows.selecCookie"), false);
-		this.cookies = cookiesName;
+		this.cookies = cookieArray;
 		super.add(getMainPanel());
 		owner.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		
@@ -77,8 +78,8 @@ public class CookiesSelectInterface extends AbstractFormDialog{
 		checkBoxPanel = new JPanel();
 		checkBoxPanel.setLayout(new BoxLayout(checkBoxPanel, BoxLayout.Y_AXIS));
 		checkBoxPanel.setBackground(Color.WHITE);
-		for(String cookie : cookies) {
-			JCheckBox checkBox = new JCheckBox(cookie);
+		for(HtmlParameter cookie : cookies) {
+			JCheckBox checkBox = new JCheckBox(cookie.getName());
 			checkBoxPanel.add(checkBox);
 		}
 		

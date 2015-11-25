@@ -50,12 +50,13 @@ public class ExtensionByPass extends ExtensionAdaptor {
         messages = ResourceBundle.getBundle(this.getClass().getPackage().getName() + ".resources.Messages", Constant.getLocale());
 	}
 	
+	@SuppressWarnings("deprecation")
 	@Override
 	public void hook(ExtensionHook extensionHook) {
 	    super.hook(extensionHook);
 	    if (getView() != null) {
 	        extensionHook.getHookMenu().addToolsMenuItem(getMenuByPass());
-	        extensionHook.getHookView().addStatusPanel(new ByPassPanel());
+	        extensionHook.getHookView().addStatusPanel(new ByPassPanel(getView().getMainFrame()));
 	    }
 	}
 	

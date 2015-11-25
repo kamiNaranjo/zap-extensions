@@ -2,12 +2,14 @@ package org.zaproxy.zap.extension.byPassModule.ui;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.util.List;
 
 import javax.swing.BoxLayout;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumnModel;
 
@@ -19,17 +21,19 @@ public class ByPassResultInterface extends AbstractFormDialog{
 	
 	private static final long serialVersionUID = 1L;
 	private JPanel mainPanel;
-	private HttpMessage results;
+	private List<HttpMessage> resultsArray;
 	
-	public ByPassResultInterface(JFrame owner, HttpMessage resultsSend) {
+	public ByPassResultInterface(JFrame owner, List<HttpMessage> urlsWithOutCookie) {
 		super(owner, ExtensionByPass.getMessageString("title.windows.results"), false);
-		results = resultsSend;
+		resultsArray = urlsWithOutCookie;
 		setResizable(false);
 		super.add(getMainPanel());
 		owner.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 	}
 
 	public JTable getTableResultPanel(){
+		JTable tableResults = new JTable();
+		DefaultTableModel tableModelResult = new DefaultTableModel(0, 0);
 		String columnNames[] = {
 			ExtensionByPass.getMessageString("label.column.ulr"),
 			ExtensionByPass.getMessageString("label.column.method"),
@@ -40,33 +44,39 @@ public class ByPassResultInterface extends AbstractFormDialog{
 			ExtensionByPass.getMessageString("label.column.size.body")
 		};
 		
-		String rowsContent[][] = {{
-			results.getRequestHeader().getURI().toString(),
-			results.getRequestHeader().getMethod(),
-			Integer.toString(results.getResponseHeader().getStatusCode()),
-			results.getResponseHeader().getReasonPhrase(),
-			Integer.toString(results.getTimeElapsedMillis()),
-			Integer.toString(results.getResponseHeader().getContentLength()),
-			Integer.toString(results.getResponseBody().length())
-		}};
-		
-		JTable tableResults = new JTable(rowsContent, columnNames);
-		tableResults.setEnabled(false);
+		tableModelResult.setColumnIdentifiers(columnNames);
+		for(HttpMessage results:resultsArray){
+			tableModelResult.addRow(new Object[] {
+				results.getRequestHeader().getHeader("REFERER"),
+				results.getRequestHeader().getMethod(),
+				results.getResponseHeader().getStatusCode(),
+				results.getResponseHeader().getReasonPhrase(),
+				results.getTimeElapsedMillis(),
+				results.getResponseHeader().getContentLength(),
+				results.getResponseBody().length()
+			});
+		}
+		tableResults.setModel(tableModelResult);
+		/*tableResults.setEnabled(false);
 		tableResults.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		resizeColumnWidth(tableResults);
 		tableResults.setPreferredScrollableViewportSize(tableResults.getPreferredSize());
-		tableResults.setFillsViewportHeight(true);
+		tableResults.setFillsViewportHeight(true);*/
 		return tableResults;
 	}
 	
 	public void resizeColumnWidth(JTable table) {
 	    final TableColumnModel columnModel = table.getColumnModel();
 	    for (int column = 0; column < table.getColumnCount(); column++) {
-	        int width = 50; // Min width
+	        int width = 50; 
+	        int max = 150;
 	        for (int row = 0; row < table.getRowCount(); row++) {
 	            TableCellRenderer renderer = table.getCellRenderer(row, column);
 	            Component comp = table.prepareRenderer(renderer, row, column);
-	            width = Math.max(comp.getPreferredSize().width +1 , width);
+	            if(comp.getPreferredSize().width < max)
+	            	width = Math.max(comp.getPreferredSize().width +1 , width);
+	            else
+	            	width = max;
 	        }
 	        columnModel.getColumn(column).setPreferredWidth(width);
 	    }
