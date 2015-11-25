@@ -17,24 +17,28 @@
  */
 package org.zaproxy.zap.extension.byPassModule;
 
+import java.awt.Dimension;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ResourceBundle;
-
-import javax.swing.JMenuItem;
 
 import org.parosproxy.paros.Constant;
 import org.parosproxy.paros.extension.ExtensionAdaptor;
 import org.parosproxy.paros.extension.ExtensionHook;
 import org.parosproxy.paros.extension.ViewDelegate;
+import org.parosproxy.paros.model.SiteNode;
+import org.parosproxy.paros.view.View;
+import org.zaproxy.zap.extension.byPassModule.ui.ByPassResultsContentPanel;
 import org.zaproxy.zap.extension.byPassModule.ui.MainInterfaceByPass;
 import org.zaproxy.zap.extension.httppanel.HttpPanelRequest;
 import org.zaproxy.zap.extension.httppanel.HttpPanelResponse;
+import org.zaproxy.zap.extension.spider.SpiderDialog;
+import org.zaproxy.zap.model.Target;
 
 public class ExtensionByPass extends ExtensionAdaptor {
 
-    private JMenuItem menuByPass;
     private static ResourceBundle messages;
+    private ByPassResultsContentPanel byPassPanel = null;
 
     public ExtensionByPass() {
         super();
@@ -50,32 +54,21 @@ public class ExtensionByPass extends ExtensionAdaptor {
         messages = ResourceBundle.getBundle(this.getClass().getPackage().getName() + ".resources.Messages", Constant.getLocale());
 	}
 	
-	@SuppressWarnings("deprecation")
 	@Override
 	public void hook(ExtensionHook extensionHook) {
 	    super.hook(extensionHook);
 	    if (getView() != null) {
-	        extensionHook.getHookMenu().addToolsMenuItem(getMenuByPass());
-	        extensionHook.getHookView().addStatusPanel(new ByPassPanel(getView().getMainFrame()));
+	        extensionHook.getHookView().addStatusPanel(getByPassPanel());
 	    }
 	}
 	
-	private JMenuItem getMenuByPass() {
-        if (menuByPass == null) {
-        	menuByPass = new JMenuItem(messages.getString("menu.tools.ByPass"));
-        	menuByPass.addActionListener(new java.awt.event.ActionListener() {
-                @Override
-                public void actionPerformed(java.awt.event.ActionEvent e) {
-            		// This is where you do what you want to do.
-            		// In this case we'll just show a popup message.
-                	MainInterfaceByPass interfaceByPass = new MainInterfaceByPass(getView().getMainFrame());
-                	interfaceByPass.pack();
-                	interfaceByPass.setVisible(true);
-                }
-            });
-        }
-        return menuByPass;
-    }
+	protected ByPassResultsContentPanel getByPassPanel(){
+		if(byPassPanel == null){
+			byPassPanel = new ByPassResultsContentPanel(this);
+		}
+		return byPassPanel;
+	}
+
 
 	public static String getMessageString (String key) {
 		return messages.getString(key);
@@ -114,5 +107,10 @@ public class ExtensionByPass extends ExtensionAdaptor {
 		return getView().getResponsePanel();
 	}
 
+	public void showSpiderDialog() {
+		MainInterfaceByPass mainInterface = new MainInterfaceByPass(getView().getMainFrame());
+		mainInterface.pack();
+		mainInterface.setVisible(true);
+	}
 	
 }

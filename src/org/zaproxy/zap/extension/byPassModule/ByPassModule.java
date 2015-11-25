@@ -93,9 +93,6 @@ public class ByPassModule {
 			}
 			urlsWithOutCookie.add(sendMessageWithOutCookies(urlWithOutCookie));
 		}
-		/*ByPassResultInterface resultInterface = new ByPassResultInterface(MainInterfaceByPass.getOwnerFrame(),);
-		resultInterface.pack();
-		resultInterface.setVisible(true);*/
 	}
 	
 	public void showCookiesToDelete(){
