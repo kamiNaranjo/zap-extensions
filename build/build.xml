@@ -328,8 +328,8 @@
 		<generate-wiki addon="browserView" />
 	</target>
 	
-	<target name="deploy-byPassModule" description="deploy the byPassModule extension">
-		<build-deploy-addon name="byPassModule" />
+	<target name="deploy-byPass" description="deploy the byPassModule extension">
+		<build-deploy-addon name="byPass" />
 	</target>
 
 	<target name="deploy-callgraph" description="deploy the callgraph extension">

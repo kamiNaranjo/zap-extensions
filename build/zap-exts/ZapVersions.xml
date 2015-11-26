@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <ZAP>
-    <addon>byPassModule</addon>
-    <addon_byPassModule>
-        <name>ByPass Module</name>
+    <addon>byPass</addon>
+    <addon_byPass>
+        <name>ByPass</name>
         <description>Module for doing byPass deleting cookies</description>
         <author>Proyecto integrador</author>
         <version>1</version>
-        <file>byPassModule-alpha-1.zap</file>
+        <file>byPass-alpha-1.zap</file>
         <status>alpha</status>
         <changes>Updated for ZAP 2.4</changes>
-        <url>http://sourceforge.net/projects/zaproxy/files/add-ons/byPassModule-alpha-1.zap/download</url>
-        <hash>SHA1:61f6971a9b45b1a5c6cefebe7b947f6c6d834f0f</hash>
-        <date>2015-11-25</date>
-        <size>61439</size>
+        <url>http://sourceforge.net/projects/zaproxy/files/add-ons/byPass-alpha-1.zap/download</url>
+        <hash>SHA1:cacaaf5eda110250e2919049cdd34e1aadc024cd</hash>
+        <date>2015-11-26</date>
+        <size>77826</size>
         <not-before-version>2.4.0</not-before-version>
-    </addon_byPassModule>
+    </addon_byPass>
 </ZAP>
