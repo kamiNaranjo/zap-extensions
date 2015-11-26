@@ -17,7 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.zaproxy.zap.extension.byPassModule;
+package org.zaproxy.zap.extension.byPass.ui;
 
 import javax.swing.JPanel;
 

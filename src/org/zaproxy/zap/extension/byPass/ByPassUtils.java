@@ -1,4 +1,4 @@
-package org.zaproxy.zap.extension.byPassModule;
+package org.zaproxy.zap.extension.byPass;
 
 import javax.swing.ImageIcon;
 
