@@ -27,8 +27,6 @@ import org.parosproxy.paros.extension.ExtensionHook;
 import org.parosproxy.paros.extension.ViewDelegate;
 import org.zaproxy.zap.extension.byPass.ui.ByPassTableModel;
 import org.zaproxy.zap.extension.byPass.ui.MainInterfaceByPass;
-import org.zaproxy.zap.extension.httppanel.HttpPanelRequest;
-import org.zaproxy.zap.extension.httppanel.HttpPanelResponse;
 
 public class ExtensionByPass extends ExtensionAdaptor{
 
@@ -92,14 +90,6 @@ public class ExtensionByPass extends ExtensionAdaptor{
 			return null;
 		}
 	}
-	
-	public HttpPanelRequest getPanelRequest(){
-		return getView().getRequestPanel();
-	}
-	
-	public HttpPanelResponse getPanelResponse(){
-		return getView().getResponsePanel();
-	}
 
 	public void showSpiderDialog() {
 		MainInterfaceByPass mainInterface = new MainInterfaceByPass(this, getView().getMainFrame());
@@ -110,4 +100,5 @@ public class ExtensionByPass extends ExtensionAdaptor{
 	public void showResults(ByPassTableModel model){
 		this.getByPassPanel().switchView(model);
 	}
+
 }

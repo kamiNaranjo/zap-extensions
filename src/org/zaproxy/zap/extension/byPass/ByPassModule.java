@@ -19,27 +19,34 @@ import org.parosproxy.paros.view.View;
 import org.zaproxy.zap.extension.byPass.ui.ByPassTableModel;
 import org.zaproxy.zap.extension.byPass.ui.CookiesSelectInterface;
 import org.zaproxy.zap.extension.byPass.ui.MainInterfaceByPass;
+import org.zaproxy.zap.view.AbstractFormDialog;
 
 public class ByPassModule {
 
 	private static List<HtmlParameter> cookieArray;
 	private static List<String> cookieName;
+	private AbstractFormDialog mainInterface;
 	private static List<HttpMessage> arrayMessages;
 	private static ByPassTableModel resultsModel;
     private static final Logger LOGGER = Logger.getLogger(ByPassModule.class);
     private ExtensionByPass extension;
+    private static int progress;
 	
-	public ByPassModule(ExtensionByPass extension, HttpMessage urlSelected){
+	public ByPassModule(ExtensionByPass extension, HttpMessage urlSelected, AbstractFormDialog mainInterface){
+		progress = 0;
 		this.extension = extension;
+		this.mainInterface = mainInterface;
 		cookieArray = new ArrayList<>();
 		cookieName = new ArrayList<>();
 		arrayMessages = new ArrayList<>();
 		arrayMessages.add(urlSelected);
 		getCookiesByHttpMessage(urlSelected);
+		showCookiesToDelete();		
 	}
 	
-	public ByPassModule(ExtensionByPass extension, SiteNode sitieSelected){
+	public ByPassModule(ExtensionByPass extension, SiteNode sitieSelected, AbstractFormDialog mainInterface){
 		this.extension = extension;
+		this.mainInterface = mainInterface;
 		cookieArray = new ArrayList<>();
 		cookieName = new ArrayList<>();
 		arrayMessages = new ArrayList<>();
@@ -80,6 +87,8 @@ public class ByPassModule {
 
 	public ByPassTableModel getMessageWithOutCookies(List<String> cookies){
 		resultsModel = new ByPassTableModel();
+		int size = arrayMessages.size();
+		int iterator = 0;
 		for(HttpMessage message:arrayMessages) {
 			HttpMessage urlWithOutCookie = message.cloneAll();
 			for(String cookieToDelete:cookies){
@@ -91,7 +100,12 @@ public class ByPassModule {
 					}
 				}
 			}
-			resultsModel.addSResul(sendMessageWithOutCookies(urlWithOutCookie));
+			HttpMessage response = sendMessageWithOutCookies(urlWithOutCookie);
+			if(message.getResponseHeader().equals(response.getResponseHeader()) && message.getResponseBody().equals(response.getResponseBody()))
+				resultsModel.addSResul(response , true);
+			else
+				resultsModel.addSResul(response , false);
+			progress = (iterator++/size) * 100;
 		}
 		return resultsModel;
 	}
@@ -99,7 +113,7 @@ public class ByPassModule {
 	public void showCookiesToDelete(){
 		if(cookieArray!= null && !cookieArray.isEmpty()){
 			CookiesSelectInterface cookieInterface = new CookiesSelectInterface(this, extension,
-					MainInterfaceByPass.getOwnerFrame(), cookieArray);
+					MainInterfaceByPass.getOwnerFrame(), cookieArray, mainInterface);
 			cookieInterface.pack();
 			cookieInterface.setVisible(true);
 		}else{
@@ -116,6 +130,10 @@ public class ByPassModule {
 			 LOGGER.error("Exception to try sendAndReceive message");
 		}
 		return messageToSend;
+	}
+	
+	public static int getProgress(){
+		return progress;
 	}
 	
 }

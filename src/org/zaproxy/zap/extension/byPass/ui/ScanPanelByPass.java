@@ -21,49 +21,27 @@ package org.zaproxy.zap.extension.byPass.ui;
 	 */
 
 	import java.awt.CardLayout;
-	import java.awt.Component;
-	import java.awt.Dimension;
-	import java.awt.EventQueue;
-	import java.awt.GridBagConstraints;
-	import java.awt.GridBagLayout;
-	import java.awt.Insets;
-	import java.awt.event.ActionEvent;
-	import java.awt.event.ActionListener;
-	import java.util.ArrayList;
-	import java.util.Enumeration;
-	import java.util.HashMap;
-	import java.util.Iterator;
-	import java.util.List;
-	import java.util.Map;
+import java.awt.Component;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 
-	import javax.swing.ImageIcon;
-	import javax.swing.JButton;
-	import javax.swing.JComboBox;
-	import javax.swing.JLabel;
-	import javax.swing.JPanel;
-	import javax.swing.JProgressBar;
-	import javax.swing.JToggleButton;
-	import javax.swing.JToolBar;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JPanel;
+import javax.swing.JToolBar;
 
-	import org.apache.log4j.Logger;
-	import org.parosproxy.paros.Constant;
-	import org.parosproxy.paros.common.AbstractParam;
-	import org.parosproxy.paros.control.Control;
-	import org.parosproxy.paros.control.Control.Mode;
-	import org.parosproxy.paros.extension.AbstractPanel;
-	import org.parosproxy.paros.extension.ExtensionAdaptor;
-	import org.parosproxy.paros.model.Model;
-	import org.parosproxy.paros.model.Session;
-	import org.parosproxy.paros.model.SiteMap;
-	import org.parosproxy.paros.model.SiteNode;
-	import org.parosproxy.paros.view.View;
+import org.apache.log4j.Logger;
+import org.parosproxy.paros.common.AbstractParam;
+import org.parosproxy.paros.control.Control;
+import org.parosproxy.paros.control.Control.Mode;
+import org.parosproxy.paros.extension.AbstractPanel;
+import org.parosproxy.paros.extension.ExtensionAdaptor;
+import org.parosproxy.paros.model.Model;
+import org.parosproxy.paros.view.View;
 import org.zaproxy.zap.extension.byPass.ExtensionByPass;
-import org.zaproxy.zap.model.Context;
-	import org.zaproxy.zap.model.GenericScanner;
-	import org.zaproxy.zap.users.User;
-	import org.zaproxy.zap.utils.SortedComboBoxModel;
+import org.zaproxy.zap.model.GenericScanner;
 import org.zaproxy.zap.view.ScanStatus;
-import org.zaproxy.zap.view.ZapToggleButton;
 
 	public abstract class ScanPanelByPass extends AbstractPanel {
 		private static final long serialVersionUID = 1L;
@@ -74,34 +52,13 @@ import org.zaproxy.zap.view.ZapToggleButton;
 		private ExtensionAdaptor extension = null;
 		private JPanel panelCommand = null;
 		private JToolBar panelToolbar = null;
-		private JLabel scannedCountNameLabel = null;
-		private JLabel foundCountNameLabel = null;
-		private List<String> activeScans = new ArrayList<>();
-
-		private String currentSite = null;
-		private JComboBox<String> siteSelect = null;
-		// The siteModel entries are all HTML, with the active ones in bold
-		private SortedComboBoxModel<String> siteModel = new SortedComboBoxModel<>();
-
 		private JButton newScanButton = null;
-		private JButton startScanButton = null;
-		private JButton stopScanButton = null;
-		private ZapToggleButton pauseScanButton = null;
-		private JButton optionsButton = null;
-		private JProgressBar progressBar = null;
-		private Map <String, GenericScanner> scanMap = new HashMap<>();
 		private AbstractParam scanParam = null;
 		private ScanStatus scanStatus = null;
 		private Mode mode = Control.getSingleton().getMode();
 		
 		private static Logger log = Logger.getLogger(ScanPanelByPass.class);
 	    
-	    /**
-	     * @param prefix
-	     * @param icon
-	     * @param extension
-	     * @param scanParam
-	     */
 	    public ScanPanelByPass(String prefix, ImageIcon icon, ExtensionAdaptor extension, AbstractParam scanParam) {
 	        super();
 	        this.prefix = prefix;
@@ -111,10 +68,6 @@ import org.zaproxy.zap.view.ZapToggleButton;
 	 		log.debug("Constructor " + prefix);
 	    }
 
-		/**
-		 * This method initializes this
-		 * 
-		 */
 		private  void initialize(ImageIcon icon) {
 	        this.setLayout(new CardLayout());
 	        if (Model.getSingleton().getOptionsParam().getViewParam().getWmUiHandlingOption() == 0) {
@@ -129,12 +82,7 @@ import org.zaproxy.zap.view.ZapToggleButton;
 	        	View.getSingleton().getMainFrame().getMainFooterPanel().addFooterToolbarRightLabel(scanStatus.getCountLabel());
 	        }
 		}
-
-		/**
-		 * This method initializes panelCommand
-		 * 
-		 * @return javax.swing.JPanel
-		 */
+		
 		private javax.swing.JPanel getPanelCommand() {
 			if (panelCommand == null) {
 
@@ -201,66 +149,29 @@ import org.zaproxy.zap.view.ZapToggleButton;
 				newScanButton = getNewScanButton();
 
 				if (newScanButton != null) {
-					panelToolbar.add(newScanButton, getGBC(x++,0));
+					panelToolbar.add(newScanButton, getGBC(0,0));
 					newScanButton.setEnabled( ! Mode.safe.equals(mode));
 					panelToolbar.addSeparator();
 					x++;
 				}
-				panelToolbar.add(new JLabel(Constant.messages.getString(prefix + ".toolbar.site.label")), getGBC(x++,0));
-				panelToolbar.add(getSiteSelect(), getGBC(x++,0));
-				
+
 				x = this.addToolBarElements(panelToolbar, Location.beforeButtons, x);
 
-				panelToolbar.add(getStartScanButton(), getGBC(x++,0));
-				panelToolbar.add(getPauseScanButton(), getGBC(x++,0));
-				panelToolbar.add(getStopScanButton(), getGBC(x++,0));
-				
 				x = this.addToolBarElements(panelToolbar, Location.beforeProgressBar, x);
 				
-				panelToolbar.add(getProgressBar(), getGBC(x++,0, 1.0, new Insets(0,5,0,5)));
-				
-				panelToolbar.add(getActiveScansNameLabel(), getGBC(x++,0));
-				panelToolbar.add(getActiveScansValueLabel(), getGBC(x++,0));
+				//panelToolbar.add(getProgressBar(), getGBC(x++,0, 1.0, new Insets(0,5,0,5)));
 				
 				x = this.addToolBarElements(panelToolbar, Location.afterProgressBar, x);
-				
-				panelToolbar.add(new JLabel(), getGBC(x++,0, 1.0, new Insets(0,0,0,0)));	// Spacer
-				panelToolbar.add(getOptionsButton(), getGBC(x++,0));
 			}
 			return panelToolbar;
 		}
 
 		protected abstract JButton getNewScanButton();
 
-		/**
-		 * Adds elements to the tool bar. The method is called while initializing the ScanPanel, at the
-		 * points specified by the {@link Location} enumeration. Should be overridden by all subclasses
-		 * that want to add new elements to the ScanPanel's tool bar.
-		 * 
-		 * <p>
-		 * The tool bar uses a {@code GridBagLayout}, so elements have to be added with a
-		 * {@code GridBagConstraints}. For this, the {@code getGBC} methods can be used. The {@code gridX} parameter
-		 * specifies the cell (as used in {@code GridBagConstraints.gridx}) of the current row where the elements can
-		 * be added.
-		 * </p>
-		 * <p>
-		 * The method must return the new coordinates of the current cell, after the elements have been
-		 * added.
-		 * </p>
-		 * 
-		 * @param toolBar the tool bar
-		 * @param location the current location where elements will be added
-		 * @param gridX the x coordinates of the current cell in the {@code GridBagLayout}
-		 * @return the new coordinates of the current cell, after the elements have been added.
-		 * @see #getGBC(int, int)
-		 * @see #getGBC(int, int, double, Insets)
-		 * @see GridBagConstraints
-		 * @see GridBagLayout
-		 */
 		protected int addToolBarElements(JToolBar toolBar, Location location, int gridX) {
 			return gridX;
 		}
-
+/*
 		private JLabel getActiveScansNameLabel() {
 			if (scannedCountNameLabel == null) {
 				scannedCountNameLabel = new javax.swing.JLabel();
@@ -277,7 +188,7 @@ import org.zaproxy.zap.view.ZapToggleButton;
 			return foundCountNameLabel;
 		}
 		
-		private void setActiveScanLabels() {
+/*		private void setActiveScanLabels() {
 		    if (EventQueue.isDispatchThread()) {
 		    	setActiveScanLabelsEventHandler();
 		    } else {
@@ -312,18 +223,10 @@ import org.zaproxy.zap.view.ZapToggleButton;
 			scanStatus.setScanCount(activeScans.size());
 		}
 		
-		private JProgressBar getProgressBar() {
-			if (progressBar == null) {
-				progressBar = new JProgressBar(0, 100);
-				progressBar.setValue(0);
-				progressBar.setSize(new Dimension(80,20));
-				progressBar.setStringPainted(true);
-				progressBar.setEnabled(false);
-			}
-			return progressBar;
-		}
+	*/
+	//	protected abstract JProgressBar getProgressBar();
 		
-		private JButton getStartScanButton() {
+	/*	private JButton getStartScanButton() {
 			if (startScanButton == null) {
 				startScanButton = new JButton();
 				startScanButton.setToolTipText(Constant.messages.getString(prefix + ".toolbar.button.start"));
@@ -340,9 +243,9 @@ import org.zaproxy.zap.view.ZapToggleButton;
 
 			}
 			return startScanButton;
-		}
+		}*/
 
-		private JButton getStopScanButton() {
+	/*	private JButton getStopScanButton() {
 			if (stopScanButton == null) {
 				stopScanButton = new JButton();
 				stopScanButton.setToolTipText(Constant.messages.getString(prefix + ".toolbar.button.stop"));
@@ -416,7 +319,7 @@ import org.zaproxy.zap.view.ZapToggleButton;
 			}
 			return siteSelect;
 		}
-		
+		*//*
 		public boolean isScanning(SiteNode node, boolean incPort) {
 			String site = getSiteFromLabel(cleanSiteName(node, incPort));
 			if (site != null) {
@@ -467,7 +370,7 @@ import org.zaproxy.zap.view.ZapToggleButton;
 		 * @param incPort the inc port
 		 * @param user the user
 		 */
-		public void scanNode(SiteNode node, boolean incPort) {
+	/*	public void scanNode(SiteNode node, boolean incPort) {
 			this.scanNode(node, incPort, null);
 		}
 		
@@ -479,7 +382,7 @@ import org.zaproxy.zap.view.ZapToggleButton;
 		 * @param incPort the inc port
 		 * @param user the user
 		 */
-		public void scanNode(SiteNode node, boolean incPort, User user) {
+	/*	public void scanNode(SiteNode node, boolean incPort, User user) {
 	 		log.debug("scanNode" + prefix + " node=" + node.getNodeName());
 			this.setTabFocus();
 			nodeSelected(node, incPort);
@@ -487,7 +390,7 @@ import org.zaproxy.zap.view.ZapToggleButton;
 				startScan(node, false, false, null, user);
 			}
 		}
-		
+		*//*
 		private String activeSitelabel(String site) {
 			return "<html><b>" + site + "</b></html>";
 		}
@@ -509,7 +412,7 @@ import org.zaproxy.zap.view.ZapToggleButton;
 			}
 		}
 		
-		public void addSite(String site, boolean incPort) {
+	/*	public void addSite(String site, boolean incPort) {
 			site = cleanSiteName(site, incPort);
 			
 			if (!isSiteAdded(site)) {
@@ -525,12 +428,12 @@ import org.zaproxy.zap.view.ZapToggleButton;
 			log.debug("addSite " + site);
 			siteModel.addElement(passiveSitelabel(site));
 		}
-
+/*
 		protected void siteSelected(String site) {
 			siteSelected(site, false); 
 		}
 		
-		protected void siteSelected(String site, boolean forceRefresh) {
+	/*	protected void siteSelected(String site, boolean forceRefresh) {
 			if (site == null) {
 				currentSite = null;
 				// call with empty string instead of null because of backward compatibility reasons
@@ -694,7 +597,7 @@ import org.zaproxy.zap.view.ZapToggleButton;
 		protected void handleContextSpecificObject(GenericScanner scanThread, Object[] contextSpecificObjects) {
 		}
 		
-		protected void startScan(SiteNode startNode, boolean justScanInScope, boolean scanChildren, 
+	/*	protected void startScan(SiteNode startNode, boolean justScanInScope, boolean scanChildren, 
 				Context scanContext, User scanUser, Object[] contextSpecificObjects) {
 	 		log.debug("startScan " + prefix + " " + startNode);
 			this.getStartScanButton().setEnabled(false);
@@ -799,11 +702,11 @@ import org.zaproxy.zap.view.ZapToggleButton;
 				// Its changed under our feet :)
 				siteModel.setSelectedItem(passiveSitelabel(currentSite));
 			}
-			*/
+			
 			setActiveScanLabels();
 		}
-
-		public void scanProgress(final String host, final int progress, final int maximum) {
+*/
+	/*	public void scanProgress(final String host, final int progress, final int maximum) {
 		    if (EventQueue.isDispatchThread()) {
 		    	scanProgressEventHandler(host, progress, maximum);
 		    } else {
@@ -823,7 +726,7 @@ import org.zaproxy.zap.view.ZapToggleButton;
 		    }
 		}
 
-		private void scanProgressEventHandler(String host, int progress, int maximum) {
+	/*	private void scanProgressEventHandler(String host, int progress, int maximum) {
 			//log.debug("scanProgress " + prefix + " on " + currentSite + " " + progress);
 			if (host.equals(currentSite)) {
 				getProgressBar().setValue(progress);
@@ -867,7 +770,7 @@ import org.zaproxy.zap.view.ZapToggleButton;
 			resetScanButtonsAndProgressBarStates(false);
 			getProgressBar().setValue(0);
 		}
-
+*/
 		public ExtensionAdaptor getExtension() {
 			return extension;
 		}
@@ -875,7 +778,7 @@ import org.zaproxy.zap.view.ZapToggleButton;
 	    public AbstractParam getScanParam() {
 			return scanParam;
 		}
-	    
+	    /*
 	    public GenericScanner getScanThread (String site) {
 	    	return scanMap.get(site);
 	    }
@@ -918,10 +821,10 @@ import org.zaproxy.zap.view.ZapToggleButton;
 		 * 
 		 * @return the current site
 		 */
-		protected String getCurrentSite(){
+	/*	protected String getCurrentSite(){
 			return this.currentSite;
 		}
-
+*/
 		protected void unload() {
 			if (View.isInitialised()) {
 				View.getSingleton().getMainFrame().getMainFooterPanel().removeFooterToolbarRightLabel(scanStatus.getCountLabel());

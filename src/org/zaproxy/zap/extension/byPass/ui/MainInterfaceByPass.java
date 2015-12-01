@@ -41,9 +41,9 @@ public class MainInterfaceByPass extends AbstractFormDialog{
 			public void actionPerformed(ActionEvent e) {
 				if(treeSities.validate()){
 					if(treeSities.isHaveChild())
-						new ByPassModule(extension, treeSities.getSitieSelect());
+						new ByPassModule(extension, treeSities.getSitieSelect(), MainInterfaceByPass.this);
 					else
-						new ByPassModule(extension, treeSities.getSelectedMessage());
+						new ByPassModule(extension, treeSities.getSelectedMessage(), MainInterfaceByPass.this);
 				}
 			}
 		});

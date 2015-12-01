@@ -1,39 +1,29 @@
 package org.zaproxy.zap.extension.byPass;
 
 import java.awt.Component;
-import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
-import javax.swing.JLabel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JToolBar;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
 import org.jdesktop.swingx.JXTable;
-import org.parosproxy.paros.common.AbstractParam;
+import org.parosproxy.paros.network.HttpMessage;
 import org.parosproxy.paros.view.View;
 import org.zaproxy.zap.extension.byPass.ui.ByPassTableModel;
 import org.zaproxy.zap.extension.byPass.ui.ScanPanelByPass;
 import org.zaproxy.zap.extension.byPass.ui.ZapTable;
-import org.zaproxy.zap.model.GenericScanner;
 
 public class ByPassPanel extends ScanPanelByPass {
 	
 	private JButton scanButton = null;
-	/** The results table. */
 	private ZapTable resultsTable;
-	/** The results pane. */
 	private JScrollPane workPane;
-	/** The found count name label. */
-	private JLabel foundCountNameLabel;
-
-	/** The found count value label. */
-	private JLabel foundCountValueLabel;
-	
 	private ExtensionByPass extension = null;
-	
 	private static final ByPassTableModel EMPTY_RESULTS_MODEL = new ByPassTableModel();
 	
 	public ByPassPanel(ExtensionByPass extensionByPass) {
@@ -41,9 +31,6 @@ public class ByPassPanel extends ScanPanelByPass {
 		this.extension = extensionByPass;
 	}
 	
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 
 	@Override
@@ -73,84 +60,58 @@ public class ByPassPanel extends ScanPanelByPass {
 		resultsTable.getColumnModel().getColumn(3).setMinWidth(50);
 		resultsTable.getColumnModel().getColumn(3).setPreferredWidth(100);
 		//RTT
-		resultsTable.getColumnModel().getColumn(3).setMinWidth(50);
-		resultsTable.getColumnModel().getColumn(3).setPreferredWidth(100);
-		
 		resultsTable.getColumnModel().getColumn(4).setMinWidth(50);
 		resultsTable.getColumnModel().getColumn(4).setPreferredWidth(100);
 		
 		resultsTable.getColumnModel().getColumn(5).setMinWidth(50);
 		resultsTable.getColumnModel().getColumn(5).setPreferredWidth(100);
+		
+		resultsTable.getColumnModel().getColumn(6).setMinWidth(50);
+		resultsTable.getColumnModel().getColumn(6).setPreferredWidth(100);
+		
+		resultsTable.getColumnModel().getColumn(7).setMinWidth(50);
+		resultsTable.getColumnModel().getColumn(7).setPreferredWidth(80);
 	}
 
 	private JXTable getScanResultsTable() {
 		if (resultsTable == null) {
-			// Create the table with a default, empty TableModel and the proper settings
 			resultsTable = new ZapTable(EMPTY_RESULTS_MODEL);
 			resultsTable.setColumnSelectionAllowed(false);
 			resultsTable.setCellSelectionEnabled(false);
 			resultsTable.setRowSelectionAllowed(true);
 			resultsTable.setAutoCreateRowSorter(true);
-
 			this.setScanResultsTableColumnSizes();
-
 			resultsTable.setName("ByPasssResult");
 			resultsTable.setDoubleBuffered(true);
-			resultsTable.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+			resultsTable.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);			
 			resultsTable.setComponentPopupMenu(new JPopupMenu() {
-
 				private static final long serialVersionUID = 6608291059686282641L;
-
 				@Override
 				public void show(Component invoker, int x, int y) {
 					View.getSingleton().getPopupMenu().show(invoker, x, y);
+				}
+			});
+			resultsTable.getSelectionModel().addListSelectionListener(
+				new ListSelectionListener() {
+					@Override
+					public void valueChanged(final ListSelectionEvent evt) {
+						if (!evt.getValueIsAdjusting()) {
+							HttpMessage message = getSelectedMessage();
+							if (message != null) {
+								displayMessageInHttpPanel(message);
+						}
+					}
 				}
 			});
 		}
 		return resultsTable;
 	}
 
-	/**
-	 * Gets the label storing the name of the count of found URIs.
-	 * 
-	 * @return the found count name label
-	 */
-	private JLabel getFoundCountNameLabel() {
-		if (foundCountNameLabel == null) {
-			foundCountNameLabel = new javax.swing.JLabel();
-			foundCountNameLabel.setText(ExtensionByPass.getMessageString("title.windows.ByPass"));
-		}
-		return foundCountNameLabel;
-	}
-
-	/**
-	 * Gets the label storing the value for count of found URIs.
-	 * 
-	 * @return the found count value label
-	 */
-	private JLabel getFoundCountValueLabel() {
-		if (foundCountValueLabel == null) {
-			foundCountValueLabel = new javax.swing.JLabel();
-			foundCountValueLabel.setText("0");
-		}
-		return foundCountValueLabel;
-	}
-
 	@Override
 	protected int addToolBarElements(JToolBar toolBar, Location location, int gridX) {
-		if (ScanPanelByPass.Location.afterProgressBar == location) {
-			toolBar.add(getFoundCountNameLabel(), getGBC(gridX++, 0, 0, new Insets(0, 5, 0, 0)));
-			toolBar.add(getFoundCountValueLabel(), getGBC(gridX++, 0));
-		}
 		return gridX;
 	}
 	
-	@Override
-	protected GenericScanner newScanThread(String arg0, AbstractParam arg1) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 	@Override
 	protected void switchView(ByPassTableModel model) {
 		if (model != null) {
@@ -161,7 +122,7 @@ public class ByPassPanel extends ScanPanelByPass {
 		}
 		
 	}
-
+	
 	@Override
 	protected JButton getNewScanButton() {
 		if (scanButton == null) {
@@ -178,9 +139,44 @@ public class ByPassPanel extends ScanPanelByPass {
 
 	@Override
 	protected void switchView(String site) {
-		// TODO Auto-generated method stub
 		
 	}
-
 	
+	protected void displayMessageInHttpPanel(final HttpMessage msg) {
+		if (msg == null) {
+			return;
+		}
+		if (msg.getRequestHeader().isEmpty()) {
+			View.getSingleton().getRequestPanel().clearView(true);
+		} else {
+			View.getSingleton().getRequestPanel().setMessage(msg);
+		}
+
+		if (msg.getResponseHeader().isEmpty()) {
+			View.getSingleton().getResponsePanel().clearView(false);
+		} else {
+			View.getSingleton().getResponsePanel().setMessage(msg, true);
+		}
+	}
+	
+	public HttpMessage getSelectedMessage() {
+		final int selectedRow = resultsTable.getSelectedRow();
+		ByPassTableModel model = (ByPassTableModel)resultsTable.getModel();
+		if (selectedRow != -1 && model != null) {
+			return model.getMessageAtIndex(selectedRow);
+		}
+		return null;
+	}
+
+/*	@Override
+	protected JProgressBar getProgressBar() {
+		if (progressBar == null) {
+			progressBar = new JProgressBar(0, 100);
+			progressBar.setValue(0);
+			progressBar.setSize(new Dimension(80,20));
+			progressBar.setStringPainted(true);
+			progressBar.setEnabled(false);
+		}
+		return progressBar;
+	}	*/
 }

@@ -31,14 +31,15 @@ public class CookiesSelectInterface extends AbstractFormDialog{
 	private JPanel checkBoxPanel;
 	private ExtensionByPass extension;
 	private ByPassModule byPassModule;
-	public CookiesSelectInterface(ByPassModule byPassModule, ExtensionByPass extension, JFrame owner, List<HtmlParameter> cookieArray) {
+	private AbstractFormDialog mainInterface;
+	public CookiesSelectInterface(ByPassModule byPassModule, ExtensionByPass extension, JFrame owner, List<HtmlParameter> cookieArray, AbstractFormDialog mainInterface) {
 		super(owner, ExtensionByPass.getMessageString("title.windows.selecCookie"), false);
+		this.mainInterface = mainInterface;
 		this.cookies = cookieArray;
 		this.extension = extension;
 		this.byPassModule = byPassModule;
 		super.add(getMainPanel());
 		owner.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		
 	}
 
 	protected JLabel getLabelHead() {
@@ -52,9 +53,9 @@ public class CookiesSelectInterface extends AbstractFormDialog{
 		acceptButton.addActionListener(new ActionListener() {	
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				mainInterface.dispose();
 				dispose();
 				extension.showResults(byPassModule.getMessageWithOutCookies(getCookiesSelected()));
-				
 			}
 		});
 		

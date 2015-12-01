@@ -18,16 +18,19 @@ public class ByPassTableModel extends AbstractTableModel{
 			ExtensionByPass.getMessageString("label.column.reason"),
 			ExtensionByPass.getMessageString("label.column.rtt"),
 			ExtensionByPass.getMessageString("label.column.size.header"),
-			ExtensionByPass.getMessageString("label.column.size.body") };
+			ExtensionByPass.getMessageString("label.column.size.body"), 
+			ExtensionByPass.getMessageString("label.column.equals")};
 
 	private static final int COLUMN_COUNT = COLUMN_NAMES.length;
 
 	private static final long serialVersionUID = 1L;
 	private List<HttpMessage> resultsArray;
+	private List<Boolean> equalsArray;
 	
 	public ByPassTableModel() {
         super();
         resultsArray = new ArrayList<>();
+        equalsArray = new ArrayList<>();
     }
 
 	@Override
@@ -54,11 +57,12 @@ public class ByPassTableModel extends AbstractTableModel{
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex) {
 		HttpMessage result = resultsArray.get(rowIndex);
+		boolean equal = equalsArray.get(rowIndex);
 		switch (columnIndex) {
 		case 0:
 			return result.getRequestHeader().getMethod();
 		case 1:
-			return result.getRequestHeader().getHeader("REFERER");
+			return result.getRequestHeader().getURI();
 		case 2:
 			return result.getResponseHeader().getStatusCode();
 		case 3:
@@ -68,15 +72,25 @@ public class ByPassTableModel extends AbstractTableModel{
 		case 5: 
 			return result.getResponseHeader().getContentLength();
 		case 6:
-			return result.getResponseBody().length();		
+			return result.getResponseBody().length();	
+		case 7:
+			return equal;
 		default:
 			return null;
 		}
 	}
 	
-	public void addSResul(HttpMessage result) {
+	public HttpMessage getMessageAtIndex(int index){
+		if(resultsArray != null && !resultsArray.isEmpty()){
+			return resultsArray.get(index);
+		}
+		return null;
+	}
+	
+	public void addSResul(HttpMessage result, boolean equals) {
 		synchronized (resultsArray) {
 			resultsArray.add(result);
+			equalsArray.add(equals);
 			try {
 				fireTableRowsInserted(resultsArray.size() - 1, resultsArray.size() - 1);
 			} catch (IndexOutOfBoundsException e) {
