@@ -93,6 +93,7 @@ public class ByPassTableModel extends AbstractTableModel{
 			equalsArray.add(equals);
 			try {
 				fireTableRowsInserted(resultsArray.size() - 1, resultsArray.size() - 1);
+				fireTableDataChanged();
 			} catch (IndexOutOfBoundsException e) {
 				// Happens occasionally but seems benign
 			}

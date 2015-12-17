@@ -10,8 +10,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
-import org.zaproxy.zap.extension.byPass.ByPassModule;
 import org.zaproxy.zap.extension.byPass.ExtensionByPass;
+import org.zaproxy.zap.extension.byPass.TargetByPass;
 import org.zaproxy.zap.view.AbstractFormDialog;
 
 public class MainInterfaceByPass extends AbstractFormDialog{
@@ -40,10 +40,7 @@ public class MainInterfaceByPass extends AbstractFormDialog{
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if(treeSities.validate()){
-					if(treeSities.isHaveChild())
-						new ByPassModule(extension, treeSities.getSitieSelect(), MainInterfaceByPass.this);
-					else
-						new ByPassModule(extension, treeSities.getSelectedMessage(), MainInterfaceByPass.this);
+					new TargetByPass(treeSities, extension, MainInterfaceByPass.this);
 				}
 			}
 		});

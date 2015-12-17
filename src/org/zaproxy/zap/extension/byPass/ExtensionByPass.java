@@ -19,19 +19,28 @@ package org.zaproxy.zap.extension.byPass;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
 
 import org.parosproxy.paros.Constant;
 import org.parosproxy.paros.extension.ExtensionAdaptor;
 import org.parosproxy.paros.extension.ExtensionHook;
 import org.parosproxy.paros.extension.ViewDelegate;
+import org.parosproxy.paros.view.View;
 import org.zaproxy.zap.extension.byPass.ui.ByPassTableModel;
 import org.zaproxy.zap.extension.byPass.ui.MainInterfaceByPass;
+import org.zaproxy.zap.model.ScanController;
+import org.zaproxy.zap.model.Target;
+import org.zaproxy.zap.users.User;
 
-public class ExtensionByPass extends ExtensionAdaptor{
+public class ExtensionByPass extends ExtensionAdaptor implements ScanController<ByPassModule>{
 
     private static ResourceBundle messages;
     private ByPassPanel byPassPanel = null;
+    private ByPassScanController scanController = null;
+    private List<String> cookiesSelected;
+    private TargetByPass targetByPass = null;
 
     public ExtensionByPass() {
         super();
@@ -43,7 +52,9 @@ public class ExtensionByPass extends ExtensionAdaptor{
     }
 
 	private void initialize() {
+		cookiesSelected = new ArrayList<>();
         this.setName("ExtensionByPass");
+        this.scanController = new ByPassScanController(this);
         messages = ResourceBundle.getBundle(this.getClass().getPackage().getName() + ".resources.Messages", Constant.getLocale());
 	}
 	
@@ -99,6 +110,107 @@ public class ExtensionByPass extends ExtensionAdaptor{
 	
 	public void showResults(ByPassTableModel model){
 		this.getByPassPanel().switchView(model);
+	}
+
+	
+
+	@Override
+	public void pauseAllScans() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void pauseScan(int arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public int removeAllScans() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int removeFinishedScans() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	
+	@Override
+	public void resumeAllScans() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void resumeScan(int arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public int startScan(String name, Target target, User user, Object[] contextSpecificObjects) {
+		int id = this.scanController.startScan(name, target, user, contextSpecificObjects);
+    	if (View.isInitialised()) {
+    		ByPassModule scanner = this.scanController.getScan(id);
+			this.getByPassPanel().scannerStarted(scanner);
+    	}
+    	return id;
+	}
+
+	@Override
+	public void stopAllScans() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void stopScan(int id) {
+		this.scanController.stopScan(id);
+	}
+
+	@Override
+	public List<ByPassModule> getActiveScans() {
+		return this.scanController.getActiveScans();
+	}
+
+	@Override
+	public List<ByPassModule> getAllScans() {
+		return this.scanController.getAllScans();
+	}
+
+	@Override
+	public ByPassModule getLastScan() {
+		return this.scanController.getLastScan();
+	}
+
+	@Override
+	public ByPassModule getScan(int id) {
+		return this.scanController.getScan(id);
+	}
+
+	@Override
+	public ByPassModule removeScan(int id) {
+		return this.scanController.removeScan(id);
+	}
+
+	public List<String> getCookiesSelected() {
+		return cookiesSelected;
+	}
+
+	public void setCookiesSelected(List<String> cookiesSelected) {
+		this.cookiesSelected = cookiesSelected;
+	}
+
+	public TargetByPass getTargetByPass() {
+		return targetByPass;
+	}
+
+	public void setTargetByPass(TargetByPass targetByPass2) {
+		this.targetByPass = targetByPass2;
 	}
 
 }

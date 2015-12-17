@@ -1,139 +1,137 @@
 package org.zaproxy.zap.extension.byPass;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
-import javax.swing.JOptionPane;
-
-import org.apache.log4j.Logger;
-import org.parosproxy.paros.db.DatabaseException;
-import org.parosproxy.paros.model.Model;
-import org.parosproxy.paros.model.SiteNode;
 import org.parosproxy.paros.network.HtmlParameter;
-import org.parosproxy.paros.network.HttpMalformedHeaderException;
 import org.parosproxy.paros.network.HttpMessage;
-import org.parosproxy.paros.network.HttpSender;
-import org.parosproxy.paros.view.View;
-import org.zaproxy.zap.extension.byPass.ui.ByPassTableModel;
-import org.zaproxy.zap.extension.byPass.ui.CookiesSelectInterface;
-import org.zaproxy.zap.extension.byPass.ui.MainInterfaceByPass;
-import org.zaproxy.zap.view.AbstractFormDialog;
+import org.zaproxy.zap.model.GenericScanner2;
 
-public class ByPassModule {
+public class ByPassModule implements GenericScanner2{
 
+	private final Lock lock;
 	private static List<HtmlParameter> cookieArray;
-	private static List<String> cookieName;
-	private AbstractFormDialog mainInterface;
 	private static List<HttpMessage> arrayMessages;
-	private static ByPassTableModel resultsModel;
-    private static final Logger LOGGER = Logger.getLogger(ByPassModule.class);
-    private ExtensionByPass extension;
-    private static int progress;
+	private ByPassThread byPassThread = null;
+    private State state;
+    private int scanId;
+    
+    private static enum State {
+		NOT_STARTED,
+		RUNNING,
+		PAUSED,
+		FINISHED
+	};
 	
-	public ByPassModule(ExtensionByPass extension, HttpMessage urlSelected, AbstractFormDialog mainInterface){
-		progress = 0;
-		this.extension = extension;
-		this.mainInterface = mainInterface;
-		cookieArray = new ArrayList<>();
-		cookieName = new ArrayList<>();
-		arrayMessages = new ArrayList<>();
-		arrayMessages.add(urlSelected);
-		getCookiesByHttpMessage(urlSelected);
-		showCookiesToDelete();		
+    public ByPassModule(List<String> cookies, TargetByPass target, int scanId, ExtensionByPass extension){
+    	lock = new ReentrantLock();
+    	this.scanId = scanId;
+		cookieArray = target.getCookieArray();
+		arrayMessages = target.getArrayMessages();
+		state = State.NOT_STARTED;
+		byPassThread = new ByPassThread(cookies, cookieArray, arrayMessages, extension);
 	}
 	
-	public ByPassModule(ExtensionByPass extension, SiteNode sitieSelected, AbstractFormDialog mainInterface){
-		this.extension = extension;
-		this.mainInterface = mainInterface;
-		cookieArray = new ArrayList<>();
-		cookieName = new ArrayList<>();
-		arrayMessages = new ArrayList<>();
-		getUrlChildren(sitieSelected);
-		showCookiesToDelete();		
-	}
-	
-	
-	private void getUrlChildren(SiteNode siteSelected){
+
+	@Override
+	public void run() {
+		lock.lock();
 		try {
-			for(int i = 0; i < siteSelected.getChildCount(); i++){
-				if(siteSelected.getChildAt(i).isLeaf()){
-					SiteNode node = (SiteNode) siteSelected.getChildAt(i);
-					HttpMessage selectedHttpMessage = ((SiteNode) node.getUserObject()).getHistoryReference().getHttpMessage();
-					getCookiesByHttpMessage(selectedHttpMessage);
-					arrayMessages.add(selectedHttpMessage);
-				}else{
-					getUrlChildren((SiteNode) siteSelected.getChildAt(i));
-				}
-			}	
-		} catch (HttpMalformedHeaderException | DatabaseException e) {
-			 LOGGER.error("Failed to read the message: ", e);
-			 JOptionPane.showMessageDialog( null, ExtensionByPass.getMessageString("message.errorReadMessage"),
-					 ExtensionByPass.getMessageString("title.windows.ByPassError"), JOptionPane.ERROR_MESSAGE);
-		}
-	}
-	
-	public void getCookiesByHttpMessage(HttpMessage urlSelected){
-		Iterator<HtmlParameter> cookiesParam = urlSelected.getCookieParams().iterator();
-		while (cookiesParam.hasNext()) {
-			HtmlParameter cookie = (HtmlParameter) cookiesParam.next();
-			if(!cookieName.contains(cookie.getName())){
-				cookieArray.add(cookie);
-				cookieName.add(cookie.getName());
+			if (State.NOT_STARTED.equals(state)) {
+				byPassThread.run();
+				state = State.RUNNING;
 			}
+		} finally {
+			lock.unlock();
+		}
+		
+	}
+
+	@Override
+	public String getDisplayName() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public int getMaximum() {
+		return 100;
+	}
+
+	@Override
+	public int getProgress() {
+		return byPassThread.getProgress();
+	}
+
+	@Override
+	public int getScanId() {
+		return scanId;
+	}
+
+	@Override
+	public boolean isPaused() {
+		return this.byPassThread.isPaused();
+	}
+
+	@Override
+	public boolean isRunning() {
+		return this.byPassThread.isRunning();
+	}
+
+	@Override
+	public boolean isStopped() {
+		return this.byPassThread.isStopped();
+	}
+
+	@Override
+	public void pauseScan() {
+		lock.lock();
+		try {
+			if (State.RUNNING.equals(state)) {
+				byPassThread.pauseScan();
+				state = State.PAUSED;
+			}
+		} finally {
+			lock.unlock();
+		}		
+	}
+
+	@Override
+	public void resumeScan() {
+		lock.lock();
+		try {
+			if (State.PAUSED.equals(state)) {
+				byPassThread.resumeScan();
+				state = State.RUNNING;
+			}
+		} finally {
+			lock.unlock();
 		}
 	}
 
-	public ByPassTableModel getMessageWithOutCookies(List<String> cookies){
-		resultsModel = new ByPassTableModel();
-		int size = arrayMessages.size();
-		int iterator = 0;
-		for(HttpMessage message:arrayMessages) {
-			HttpMessage urlWithOutCookie = message.cloneAll();
-			for(String cookieToDelete:cookies){
-				for (HtmlParameter cookie:cookieArray) {
-					if(cookie.getName().equals(cookieToDelete)){
-						urlWithOutCookie.getCookieParams().remove(cookie);
-						cookieArray.remove(cookie);
-						break;
-					}
-				}
-			}
-			HttpMessage response = sendMessageWithOutCookies(urlWithOutCookie);
-			if(message.getResponseHeader().equals(response.getResponseHeader()) && message.getResponseBody().equals(response.getResponseBody()))
-				resultsModel.addSResul(response , true);
-			else
-				resultsModel.addSResul(response , false);
-			progress = (iterator++/size) * 100;
-		}
-		return resultsModel;
+	@Override
+	public void setDisplayName(String arg0) {
+		// TODO Auto-generated method stub
+		
 	}
-	
-	public void showCookiesToDelete(){
-		if(cookieArray!= null && !cookieArray.isEmpty()){
-			CookiesSelectInterface cookieInterface = new CookiesSelectInterface(this, extension,
-					MainInterfaceByPass.getOwnerFrame(), cookieArray, mainInterface);
-			cookieInterface.pack();
-			cookieInterface.setVisible(true);
-		}else{
-			View.getSingleton().showMessageDialog(ExtensionByPass.getMessageString("message.dontContainCookie"));
-		}
+
+	@Override
+	public void setScanId(int id) {
+		this.scanId = id;		
 	}
-	
-	public static HttpMessage sendMessageWithOutCookies(HttpMessage messageToSend){
-		HttpSender sender = new HttpSender(Model.getSingleton().getOptionsParam().getConnectionParam(),
-                true, HttpSender.FUZZER_INITIATOR);
+
+	@Override
+	public void stopScan() {
+		lock.lock();
 		try {
-			sender.sendAndReceive(messageToSend);
-		} catch (IOException e) {
-			 LOGGER.error("Exception to try sendAndReceive message");
+			if (!State.NOT_STARTED.equals(state) && !State.FINISHED.equals(state)) {
+				byPassThread.stopScan();
+				state = State.FINISHED;
+			}
+		} finally {
+			lock.unlock();
 		}
-		return messageToSend;
-	}
-	
-	public static int getProgress(){
-		return progress;
 	}
 	
 }

@@ -15,10 +15,11 @@ import org.jdesktop.swingx.JXTable;
 import org.parosproxy.paros.network.HttpMessage;
 import org.parosproxy.paros.view.View;
 import org.zaproxy.zap.extension.byPass.ui.ByPassTableModel;
-import org.zaproxy.zap.extension.byPass.ui.ScanPanelByPass;
 import org.zaproxy.zap.extension.byPass.ui.ZapTable;
+import org.zaproxy.zap.model.ScanController;
+import org.zaproxy.zap.view.ScanPanel2;
 
-public class ByPassPanel extends ScanPanelByPass {
+public class ByPassPanel extends ScanPanel2<ByPassModule, ScanController<ByPassModule>> {
 	
 	private JButton scanButton = null;
 	private ZapTable resultsTable;
@@ -112,11 +113,11 @@ public class ByPassPanel extends ScanPanelByPass {
 		return gridX;
 	}
 	
-	@Override
 	protected void switchView(ByPassTableModel model) {
 		if (model != null) {
 			this.getScanResultsTable().setModel(model);
 			this.setScanResultsTableColumnSizes();
+			this.setTabFocus();
 		} else {
 			this.getScanResultsTable().setModel(EMPTY_RESULTS_MODEL);
 		}
@@ -137,10 +138,6 @@ public class ByPassPanel extends ScanPanelByPass {
 		return scanButton;
 	}
 
-	@Override
-	protected void switchView(String site) {
-		
-	}
 	
 	protected void displayMessageInHttpPanel(final HttpMessage msg) {
 		if (msg == null) {
@@ -166,6 +163,18 @@ public class ByPassPanel extends ScanPanelByPass {
 			return model.getMessageAtIndex(selectedRow);
 		}
 		return null;
+	}
+
+	@Override
+	protected int getNumberOfScansToShow() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	protected void switchView(ByPassModule arg0) {
+		// TODO Auto-generated method stub
+		
 	}
 
 /*	@Override

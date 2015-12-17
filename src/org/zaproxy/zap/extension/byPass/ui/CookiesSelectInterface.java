@@ -16,7 +16,6 @@ import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
 import org.parosproxy.paros.network.HtmlParameter;
-import org.zaproxy.zap.extension.byPass.ByPassModule;
 import org.zaproxy.zap.extension.byPass.ExtensionByPass;
 import org.zaproxy.zap.view.AbstractFormDialog;
 
@@ -30,14 +29,13 @@ public class CookiesSelectInterface extends AbstractFormDialog{
 	private List<HtmlParameter> cookies;
 	private JPanel checkBoxPanel;
 	private ExtensionByPass extension;
-	private ByPassModule byPassModule;
 	private AbstractFormDialog mainInterface;
-	public CookiesSelectInterface(ByPassModule byPassModule, ExtensionByPass extension, JFrame owner, List<HtmlParameter> cookieArray, AbstractFormDialog mainInterface) {
+	
+	public CookiesSelectInterface(ExtensionByPass extension, JFrame owner, List<HtmlParameter> cookieArray, AbstractFormDialog mainInterface) {
 		super(owner, ExtensionByPass.getMessageString("title.windows.selecCookie"), false);
 		this.mainInterface = mainInterface;
 		this.cookies = cookieArray;
 		this.extension = extension;
-		this.byPassModule = byPassModule;
 		super.add(getMainPanel());
 		owner.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 	}
@@ -55,7 +53,8 @@ public class CookiesSelectInterface extends AbstractFormDialog{
 			public void actionPerformed(ActionEvent e) {
 				mainInterface.dispose();
 				dispose();
-				extension.showResults(byPassModule.getMessageWithOutCookies(getCookiesSelected()));
+				extension.setCookiesSelected(getCookiesSelected());
+				extension.startScan(null, null, null, null);
 			}
 		});
 		
