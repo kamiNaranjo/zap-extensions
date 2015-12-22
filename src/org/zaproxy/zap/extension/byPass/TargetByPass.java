@@ -21,10 +21,12 @@ public class TargetByPass {
 	
 	private static List<HtmlParameter> cookieArray;
 	private static List<String> cookieName;
+	private static List<String> resources;
     private static final Logger LOGGER = Logger.getLogger(ByPassModule.class);
 	private static List<HttpMessage> arrayMessages;
 	private ExtensionByPass extension;
 	private MainInterfaceByPass mainInterface;
+	private HttpMessageSelectorPanel target;
 
 	public TargetByPass(HttpMessageSelectorPanel target, ExtensionByPass extension, MainInterfaceByPass mainInterface){
 		cookieArray = new ArrayList<>();
@@ -32,7 +34,10 @@ public class TargetByPass {
 		arrayMessages = new ArrayList<>();
 		this.mainInterface = mainInterface;
 		this.extension = extension;
-		
+		this.target = target;
+		if(target.isRoot()){
+			getUrlChildren(target.getArraySite());
+		}
 		if(target.isHaveChild())
 			getUrlChildren(target.getSitieSelect());
 		else{
@@ -41,6 +46,8 @@ public class TargetByPass {
 		}
 		showCookiesToDelete();		
 	}
+	
+	
 	
 	public void getCookiesByHttpMessage(HttpMessage urlSelected){
 		Iterator<HtmlParameter> cookiesParam = urlSelected.getCookieParams().iterator();
@@ -72,11 +79,18 @@ public class TargetByPass {
 		}
 	}
 	
+	private void getUrlChildren(List<SiteNode> siteSelected){
+		for(SiteNode node: siteSelected){
+			getUrlChildren(node);
+		}
+	}
+	
+	
 	public void showCookiesToDelete(){
 		if(cookieArray!= null && !cookieArray.isEmpty()){
 			extension.setTargetByPass(TargetByPass.this);
 			CookiesSelectInterface cookieInterface = new CookiesSelectInterface(extension,
-					MainInterfaceByPass.getOwnerFrame(), cookieArray, mainInterface);
+					MainInterfaceByPass.getOwnerFrame(), arrayMessages, cookieArray, mainInterface);
 			cookieInterface.pack();
 			cookieInterface.setVisible(true);
 		}else{
@@ -84,6 +98,20 @@ public class TargetByPass {
 		}
 	}
 
+	public void deleteResource(List<String> resourcesSelected){
+		if(resourcesSelected != null){
+			for (Iterator<HttpMessage> iter = arrayMessages.iterator(); iter.hasNext();) {
+				final HttpMessage msg = iter.next();
+    			for(String resource: resourcesSelected){
+    				if(msg.getRequestHeader().getURI().toString().endsWith(resource)){
+    					iter.remove();
+    					break;
+    				}
+    			}
+    		}
+    	}
+    }
+	
 	public  List<HtmlParameter> getCookieArray() {
 		return cookieArray;
 	}
@@ -99,4 +127,17 @@ public class TargetByPass {
 	public  void setArrayMessages(List<HttpMessage> arrayMessages) {
 		TargetByPass.arrayMessages = arrayMessages;
 	}
+
+	public SiteNode getTarget() {
+		return target.getSitieSelect();
+	}
+
+	public static List<String> getResources() {
+		return resources;
+	}
+
+	public static void setResources(List<String> resources) {
+		TargetByPass.resources = resources;
+	}
+
 }

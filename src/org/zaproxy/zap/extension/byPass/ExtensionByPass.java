@@ -40,6 +40,7 @@ public class ExtensionByPass extends ExtensionAdaptor implements ScanController<
     private ByPassPanel byPassPanel = null;
     private ByPassScanController scanController = null;
     private List<String> cookiesSelected;
+    private List<String> resourcesSelected;
     private TargetByPass targetByPass = null;
 
     public ExtensionByPass() {
@@ -53,6 +54,7 @@ public class ExtensionByPass extends ExtensionAdaptor implements ScanController<
 
 	private void initialize() {
 		cookiesSelected = new ArrayList<>();
+		resourcesSelected = new ArrayList<>();
         this.setName("ExtensionByPass");
         this.scanController = new ByPassScanController(this);
         messages = ResourceBundle.getBundle(this.getClass().getPackage().getName() + ".resources.Messages", Constant.getLocale());
@@ -65,12 +67,16 @@ public class ExtensionByPass extends ExtensionAdaptor implements ScanController<
 	        extensionHook.getHookView().addStatusPanel(getByPassPanel());
 	    }
 	}
-	
+		
 	public ByPassPanel getByPassPanel(){
 		if(byPassPanel == null){
 			byPassPanel = new ByPassPanel(this);
 		}			
 		return byPassPanel;
+	}
+	
+	public void finishScanPanel(){
+		byPassPanel.finishScan();
 	}
 	
 	public static String getMessageString (String key) {
@@ -108,28 +114,27 @@ public class ExtensionByPass extends ExtensionAdaptor implements ScanController<
 		mainInterface.setVisible(true);
 	}
 	
-	public void showResults(ByPassTableModel model){
+	public void showResults(ByPassTableModel model, int progress){
+		this.getByPassPanel().switchView(model, progress);
+	}
+
+	public void showResults(ByPassModule model){
 		this.getByPassPanel().switchView(model);
 	}
 
-	
-
 	@Override
 	public void pauseAllScans() {
-		// TODO Auto-generated method stub
-		
+		scanController.pauseAllScans();
 	}
 
 	@Override
-	public void pauseScan(int arg0) {
-		// TODO Auto-generated method stub
-		
+	public void pauseScan(int id) {
+		this.scanController.pauseScan(id);
 	}
 
 	@Override
 	public int removeAllScans() {
-		// TODO Auto-generated method stub
-		return 0;
+		return scanController.removeAllScans();
 	}
 
 	@Override
@@ -141,16 +146,14 @@ public class ExtensionByPass extends ExtensionAdaptor implements ScanController<
 	
 	@Override
 	public void resumeAllScans() {
-		// TODO Auto-generated method stub
-		
+		scanController.resumeAllScans();
 	}
 
 	@Override
 	public void resumeScan(int arg0) {
-		// TODO Auto-generated method stub
-		
+		scanController.resumeScan(arg0);
 	}
-
+	
 	@Override
 	public int startScan(String name, Target target, User user, Object[] contextSpecificObjects) {
 		int id = this.scanController.startScan(name, target, user, contextSpecificObjects);
@@ -160,11 +163,14 @@ public class ExtensionByPass extends ExtensionAdaptor implements ScanController<
     	}
     	return id;
 	}
+	
+	public void setResourcesToSkiped(List<String> resourcesSelected){
+		this.setResourcesSelected(resourcesSelected);
+	}
 
 	@Override
 	public void stopAllScans() {
-		// TODO Auto-generated method stub
-		
+		scanController.stopAllScans();		
 	}
 
 	@Override
@@ -213,4 +219,13 @@ public class ExtensionByPass extends ExtensionAdaptor implements ScanController<
 		this.targetByPass = targetByPass2;
 	}
 
+	public List<String> getResourcesSelected() {
+		return resourcesSelected;
+	}
+
+	public void setResourcesSelected(List<String> resourcesSelected) {
+		this.resourcesSelected = resourcesSelected;
+		targetByPass.deleteResource(resourcesSelected);
+	}
+	  
 }

@@ -20,22 +20,29 @@ import org.zaproxy.zap.model.GenericScanner;
 import org.zaproxy.zap.model.TechSet;
 import org.zaproxy.zap.users.User;
 
-	public class ByPassThread extends Thread implements GenericScanner{
+	public class ByPassThread implements Runnable, GenericScanner{
 	
-	private static ByPassTableModel resultsModel;
-    private static final Logger LOGGER = Logger.getLogger(ByPassThread.class);
+	private boolean isPaused = false;
+	private ByPassTableModel resultsModel;
+	private static final Logger LOGGER = Logger.getLogger(ByPassThread.class);
     private List<String> cookies;
   	private List<HtmlParameter> cookieArray;
     private List<HttpMessage> arrayMessages;
     private ExtensionByPass extension;
-	protected int progress = 0;
-	protected int id = 0;
+    private ByPassModule module;
+	protected int progress;
+	protected int id;
+	private boolean isRunning;
+	private SiteNode startNode;
 	
-	public ByPassThread(List<String> cookies, List<HtmlParameter> cookieArray, List<HttpMessage> arrayMessages, ExtensionByPass extension){
+	public ByPassThread(List<String> cookies, List<HtmlParameter> cookieArray, SiteNode siteNode, List<HttpMessage> arrayMessages, ExtensionByPass extension, ByPassModule module){
 		this.cookies = cookies;
 		this.extension = extension;
 		this.cookieArray = cookieArray;
 		this.arrayMessages = arrayMessages;
+		this.module = module;
+		this.startNode = siteNode;
+		resultsModel = new ByPassTableModel();
 	}
 	
 	public void scanProgress(int progress) {
@@ -45,11 +52,17 @@ import org.zaproxy.zap.users.User;
 	}
 	
 	public void getMessageWithOutCookies(){
-		resultsModel = new ByPassTableModel();
 		int size = arrayMessages.size();
 		int iterator = 0;
 		List<HttpCookie> cookiesHTTP = new ArrayList<>();
 		for(HttpMessage message:arrayMessages) {
+			while(!isRunning){
+				try {
+					Thread.sleep(50);
+				} catch (InterruptedException e) {
+					 LOGGER.error("Exception to slepping thread");
+				}
+			}
 			TreeSet<HtmlParameter> cookieParam = new TreeSet<>();
 			HttpMessage urlWithOutCookie;
 			for(String cookieToDelete:cookies){
@@ -71,11 +84,12 @@ import org.zaproxy.zap.users.User;
 				resultsModel.addSResul(response , true);
 			else
 				resultsModel.addSResul(response , false);
-			extension.showResults(resultsModel);
 			iterator++;
 			progress = (int) ((iterator*100)/size);
-			
+			extension.showResults(module);
 		}
+		module.finishedTread();
+		extension.finishScanPanel();
 	}
 	
 	public HttpMessage sendMessageWithOutCookies(HttpMessage messageToSend){
@@ -88,34 +102,76 @@ import org.zaproxy.zap.users.User;
 		return messageToSend;
 	}
 
-	@Override
+	/**
+	 * **/
+	
 	public void run(){
+		this.isRunning = true;
+		this.isPaused = false;
 		getMessageWithOutCookies();
 	}
 	
 	@Override
 	public void stopScan(){
+		this.isRunning = false;
+		this.isPaused = false;
+		extension.showResults(module);
 		Thread.currentThread().interrupt();
+		module.finishedTread();
+		extension.finishScanPanel();
 	};
 
 	@Override
 	public boolean isStopped(){
-		return Thread.currentThread().isInterrupted();
+		return false;
 	}
 	
+	@Override
+	public void pauseScan(){
+		this.isRunning = false;
+		this.isPaused = true;
+	}
+	
+	@Override
+	public boolean isPaused() {
+		return this.isPaused;
+	}
+
+	@Override
+	public boolean isRunning() {
+		return this.isRunning;
+	}
+
+	@Override
+	public void reset() {
+		this.resultsModel.removeAllElements();
+		extension.showResults(module);
+	}
+
+	@Override
+	public void resumeScan() {
+		this.isRunning = true;
+		this.isPaused = false;
+	}
+	/**
+	 * **/
 	@Override
 	public int getProgress(){
 		return progress;
 	}
 
-	@Override
-	public void pauseScan(){
-		Thread.currentThread().interrupt();
-	}
 	public ByPassTableModel getMessagesTableModel() {
 	    return resultsModel;
 	}
 	
+	public SiteNode getSiteNode() {
+		return startNode;
+	}
+
+	public void setSiteNote(SiteNode node) {
+		this.startNode = node;
+	}
+
 	public List<String> getCookies() {
 		return cookies;
 	}
@@ -139,11 +195,13 @@ import org.zaproxy.zap.users.User;
 	public void setArrayMessages(List<HttpMessage> arrayMessages) {
 		this.arrayMessages = arrayMessages;
 	}
+	
+	 public  ByPassTableModel getResultsModel() {
+		return resultsModel;
+	}
 
-	@Override
-	public boolean getJustScanInScope() {
-		// TODO Auto-generated method stub
-		return false;
+	public void setResultsModel(ByPassTableModel resultsModel) {
+		this.resultsModel = resultsModel;
 	}
 
 	@Override
@@ -159,38 +217,27 @@ import org.zaproxy.zap.users.User;
 
 	@Override
 	public String getSite() {
-		// TODO Auto-generated method stub
-		return null;
+		return startNode.toString();
 	}
 
 	@Override
 	public SiteNode getStartNode() {
-		// TODO Auto-generated method stub
-		return null;
+		return startNode;
 	}
 
 	@Override
-	public boolean isPaused() {
+	public void setStartNode(SiteNode arg0) {
+		this.startNode = arg0;		
+	}
+
+	public int getScanId() {
+		return id;
+	}	
+	
+	@Override
+	public boolean getJustScanInScope() {
 		// TODO Auto-generated method stub
 		return false;
-	}
-
-	@Override
-	public boolean isRunning() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public void reset() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void resumeScan() {
-		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
@@ -218,18 +265,13 @@ import org.zaproxy.zap.users.User;
 	}
 
 	@Override
-	public void setStartNode(SiteNode arg0) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
 	public void setTechSet(TechSet arg0) {
 		// TODO Auto-generated method stub
 		
 	}
 
-	public int getScanId() {
-		return id;
+	@Override
+	public void start() {
+		run();	
 	}
 }

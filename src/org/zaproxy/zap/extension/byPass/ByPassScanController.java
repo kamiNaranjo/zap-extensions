@@ -32,7 +32,7 @@ public class ByPassScanController implements ScanController<ByPassModule>{
 		spiderScansLock.lock();
 		try {
 			int id = this.scanIdCounter++;
-			ByPassModule scan = new ByPassModule(extension.getCookiesSelected(), extension.getTargetByPass(), id, extension);
+			ByPassModule scan = new ByPassModule(extension.getCookiesSelected(), extension.getResourcesSelected(), extension.getTargetByPass(), id, extension);
 			this.spiderScanMap.put(id, scan);
 			this.spiderScanList.add(scan);
 			scan.run();

@@ -1,8 +1,10 @@
 package org.zaproxy.zap.extension.byPass;
 
 import java.awt.Component;
+import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.lang.reflect.InvocationTargetException;
 
 import javax.swing.JButton;
 import javax.swing.JPopupMenu;
@@ -29,6 +31,7 @@ public class ByPassPanel extends ScanPanel2<ByPassModule, ScanController<ByPassM
 	
 	public ByPassPanel(ExtensionByPass extensionByPass) {
 		super("spider", ByPassUtils.BYPASS_ICON, extensionByPass, null);
+		super.setName("BYPASS");
 		this.extension = extensionByPass;
 	}
 	
@@ -110,18 +113,20 @@ public class ByPassPanel extends ScanPanel2<ByPassModule, ScanController<ByPassM
 
 	@Override
 	protected int addToolBarElements(JToolBar toolBar, Location location, int gridX) {
+		getStopScanButton().setToolTipText(ExtensionByPass.getMessageString("tool.tip.stop.button"));
+		getPauseScanButton().setToolTipText(ExtensionByPass.getMessageString("tool.tip.pause.button"));
 		return gridX;
 	}
 	
-	protected void switchView(ByPassTableModel model) {
+	protected void switchView(ByPassTableModel model, int progress) {
 		if (model != null) {
 			this.getScanResultsTable().setModel(model);
 			this.setScanResultsTableColumnSizes();
 			this.setTabFocus();
+			this.getProgressBar().setValue(progress);
 		} else {
 			this.getScanResultsTable().setModel(EMPTY_RESULTS_MODEL);
 		}
-		
 	}
 	
 	@Override
@@ -129,6 +134,7 @@ public class ByPassPanel extends ScanPanel2<ByPassModule, ScanController<ByPassM
 		if (scanButton == null) {
 			scanButton = new JButton(ExtensionByPass.getMessageString("title.windows.ByPass"));
 			scanButton.setIcon(ByPassUtils.BYPASS_ICON);
+			scanButton.setToolTipText(ExtensionByPass.getMessageString("tool.tip.start.button"));
 			scanButton.addActionListener(new ActionListener () {
 				public void actionPerformed(ActionEvent e) {
 					extension.showSpiderDialog();
@@ -167,25 +173,42 @@ public class ByPassPanel extends ScanPanel2<ByPassModule, ScanController<ByPassM
 
 	@Override
 	protected int getNumberOfScansToShow() {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
-	protected void switchView(ByPassModule arg0) {
-		// TODO Auto-generated method stub
-		
+	protected void switchView(final ByPassModule scanner) {
+		if (View.isInitialised() && !EventQueue.isDispatchThread()) {
+			try {
+				EventQueue.invokeAndWait(new Runnable() {
+					@Override
+					public void run() {
+						switchView(scanner);
+					}
+				});
+			} catch (InvocationTargetException | InterruptedException e) {
+			}
+			return;
+		}
+		if (scanner != null) {
+			this.getScanResultsTable().setModel(scanner.getResultsTableModel());
+			this.setScanResultsTableColumnSizes();
+			this.getProgressBar().setValue(scanner.getProgress());
+			if(scanner.getState().name().equals("FINISHED")){
+				this.getStopScanButton().setEnabled(false);
+				this.getPauseScanButton().setEnabled(false);
+				this.getProgressBar().setEnabled(false);
+			}
+		} else {
+			this.getScanResultsTable().setModel(EMPTY_RESULTS_MODEL);
+		}
 	}
 
-/*	@Override
-	protected JProgressBar getProgressBar() {
-		if (progressBar == null) {
-			progressBar = new JProgressBar(0, 100);
-			progressBar.setValue(0);
-			progressBar.setSize(new Dimension(80,20));
-			progressBar.setStringPainted(true);
-			progressBar.setEnabled(false);
-		}
-		return progressBar;
-	}	*/
+	public void finishScan(){
+		this.getStopScanButton().setEnabled(false);
+		this.getPauseScanButton().setEnabled(false);
+		this.getProgressBar().setEnabled(false);
+	}
+	
+
 }

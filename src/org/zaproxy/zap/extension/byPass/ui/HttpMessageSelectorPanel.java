@@ -19,7 +19,9 @@
  */
 package org.zaproxy.zap.extension.byPass.ui;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 import javax.swing.GroupLayout;
 import javax.swing.JOptionPane;
@@ -49,10 +51,13 @@ public class HttpMessageSelectorPanel implements MessageSelectorPanel<HttpMessag
     private final DefaultTreeModel messagesTreeModel;
     private SiteNode sitieSelect;
     private boolean haveChild;
+    private boolean isRoot;
+    private final List<SiteNode> arraySite;
 
     private HttpMessage selectedHttpMessage;
 
     public HttpMessageSelectorPanel() {
+    	arraySite = new ArrayList<>();
         panel = new JPanel();
         GroupLayout layout = new GroupLayout(panel);
         panel.setLayout(layout);
@@ -95,27 +100,39 @@ public class HttpMessageSelectorPanel implements MessageSelectorPanel<HttpMessag
 
     @Override
     public boolean validate() {
-        SiteNode node = (SiteNode) messagesTree.getLastSelectedPathComponent();
-        if (node != null && node.getParent() != null) {
-            try {
-            	if(!node.isLeaf())
-            		setHaveChild(true);
-            	else
-            		setHaveChild(false);
-            	setSitieSelect(node);
-                selectedHttpMessage = ((SiteNode) node.getUserObject()).getHistoryReference().getHttpMessage();
-                
-                return true;
-            } catch (HttpMalformedHeaderException | DatabaseException e) {
-                LOGGER.error("Failed to read the message: ", e);
-                JOptionPane.showMessageDialog( null, ExtensionByPass.getMessageString("message.errorReadMessage"),
-                		ExtensionByPass.getMessageString("title.windows.ByPassError"),
-                        JOptionPane.ERROR_MESSAGE);
-                messagesTree.requestFocusInWindow();
-                return false;
-            }
-        }
-        JOptionPane.showMessageDialog(null, ExtensionByPass.getMessageString("message.errorNotSelectSitie"),
+    	SiteNode node = (SiteNode) messagesTree.getLastSelectedPathComponent();
+    	if (node != null) {
+    		 try {
+    			 if(node.getParent() != null){
+    				 setRoot(false);
+    				 if(!node.isLeaf())
+ 	            		setHaveChild(true);
+ 	            	else
+ 	            		setHaveChild(false);
+ 	            	setSitieSelect(node);
+ 	                selectedHttpMessage = ((SiteNode) node.getUserObject()).getHistoryReference().getHttpMessage();
+ 	                return true;
+    			 }else{
+    				 setRoot(true);
+    				 setHaveChild(true);
+    				 for(int i = 0; i < node.getChildCount(); i++){
+    					 SiteNode nodechild = (SiteNode) node.getChildAt(i);
+    					 setSitieSelect(nodechild);
+    					 selectedHttpMessage = ((SiteNode) nodechild.getUserObject()).getHistoryReference().getHttpMessage();
+    					 arraySite.add(nodechild);
+    				 }
+    				 return true;
+    			}
+    		 }catch (HttpMalformedHeaderException | DatabaseException e) {
+    			 LOGGER.error("Failed to read the message: ", e);
+    			 JOptionPane.showMessageDialog( null, ExtensionByPass.getMessageString("message.errorReadMessage"),
+    					 ExtensionByPass.getMessageString("title.windows.ByPassError"),
+    					 JOptionPane.ERROR_MESSAGE);
+    			 messagesTree.requestFocusInWindow();
+    			 return false;
+	         }
+    	}
+    	JOptionPane.showMessageDialog(null, ExtensionByPass.getMessageString("message.errorNotSelectSitie"),
         		ExtensionByPass.getMessageString("title.windows.ByPassError"), JOptionPane.ERROR_MESSAGE);
         messagesTree.requestFocusInWindow();
         return false;
@@ -154,6 +171,18 @@ public class HttpMessageSelectorPanel implements MessageSelectorPanel<HttpMessag
 	
 	public JTree getMessagesTree(){
 		return messagesTree;
+	}
+
+	public boolean isRoot() {
+		return isRoot;
+	}
+
+	public void setRoot(boolean isRoot) {
+		this.isRoot = isRoot;
+	}
+
+	public List<SiteNode> getArraySite() {
+		return arraySite;
 	}
 
 }
