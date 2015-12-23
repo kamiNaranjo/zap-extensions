@@ -54,7 +54,6 @@ import org.zaproxy.zap.users.User;
 	public void getMessageWithOutCookies(){
 		int size = arrayMessages.size();
 		int iterator = 0;
-		List<HttpCookie> cookiesHTTP = new ArrayList<>();
 		for(HttpMessage message:arrayMessages) {
 			while(!isRunning){
 				try {
@@ -63,6 +62,7 @@ import org.zaproxy.zap.users.User;
 					 LOGGER.error("Exception to slepping thread");
 				}
 			}
+			List<HttpCookie> cookiesHTTP = new ArrayList<>();
 			TreeSet<HtmlParameter> cookieParam = new TreeSet<>();
 			HttpMessage urlWithOutCookie;
 			for(String cookieToDelete:cookies){
@@ -70,7 +70,7 @@ import org.zaproxy.zap.users.User;
 					cookieParam = message.getCookieParams();
 					if(cookie.getName().equals(cookieToDelete)){
 						cookieParam.remove(cookie);
-					}else{
+					}else if(message.getCookieParams().contains(cookie)){
 						cookiesHTTP.add(new HttpCookie(cookie.getName(), cookie.getValue()));
 					}
 				}
@@ -113,10 +113,11 @@ import org.zaproxy.zap.users.User;
 	
 	@Override
 	public void stopScan(){
-		this.isRunning = false;
+		this.isRunning = true;
 		this.isPaused = false;
 		extension.showResults(module);
 		Thread.currentThread().interrupt();
+		this.isRunning = false;
 		module.finishedTread();
 		extension.finishScanPanel();
 	};

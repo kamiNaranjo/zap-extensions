@@ -31,7 +31,7 @@ public class ByPassPanel extends ScanPanel2<ByPassModule, ScanController<ByPassM
 	
 	public ByPassPanel(ExtensionByPass extensionByPass) {
 		super("spider", ByPassUtils.BYPASS_ICON, extensionByPass, null);
-		super.setName("BYPASS");
+		super.setName(ExtensionByPass.getMessageString("title.windows.ByPass"));
 		this.extension = extensionByPass;
 	}
 	
@@ -209,6 +209,5 @@ public class ByPassPanel extends ScanPanel2<ByPassModule, ScanController<ByPassM
 		this.getPauseScanButton().setEnabled(false);
 		this.getProgressBar().setEnabled(false);
 	}
-	
 
 }
