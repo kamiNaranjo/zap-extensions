@@ -112,6 +112,20 @@ public class TargetByPass {
     	}
     }
 	
+	public void deleteCookies(List<String> cookiesSelected){
+		if(cookieName != null){
+			for (Iterator<HtmlParameter> iter = cookieArray.iterator(); iter.hasNext();) {
+				final HtmlParameter cookie = iter.next();
+				for(String resource: cookiesSelected){
+					if(cookie.getName().equals(resource)){
+						iter.remove();
+						break;
+					}
+				}
+			}
+		}
+	}
+	
 	public  List<HtmlParameter> getCookieArray() {
 		return cookieArray;
 	}

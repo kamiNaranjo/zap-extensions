@@ -65,14 +65,10 @@ import org.zaproxy.zap.users.User;
 			List<HttpCookie> cookiesHTTP = new ArrayList<>();
 			TreeSet<HtmlParameter> cookieParam = new TreeSet<>();
 			HttpMessage urlWithOutCookie;
-			for(String cookieToDelete:cookies){
-				for (HtmlParameter cookie:cookieArray) {
-					cookieParam = message.getCookieParams();
-					if(cookie.getName().equals(cookieToDelete)){
-						cookieParam.remove(cookie);
-					}else if(message.getCookieParams().contains(cookie)){
-						cookiesHTTP.add(new HttpCookie(cookie.getName(), cookie.getValue()));
-					}
+			for (HtmlParameter cookie:cookieArray) {
+				if(message.getCookieParams().contains(cookie)){
+					cookiesHTTP.add(new HttpCookie(cookie.getName(), cookie.getValue()));
+					cookieParam.add(cookie);
 				}
 			}
 			urlWithOutCookie = new HttpMessage(message.getRequestHeader(), message.getRequestBody());

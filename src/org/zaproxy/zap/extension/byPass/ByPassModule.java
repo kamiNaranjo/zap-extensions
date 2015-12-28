@@ -23,6 +23,7 @@ public class ByPassModule implements GenericScanner2{
     private int scanId;
     private String displayName;
     List<String> resources;
+    List<String> cookies;
     
     static enum State {
 		NOT_STARTED,
@@ -35,6 +36,7 @@ public class ByPassModule implements GenericScanner2{
     	lock = new ReentrantLock();
     	this.scanId = scanId;
     	this.resources = resources;
+    	target.deleteCookies(cookies);
 		cookieArray = target.getCookieArray();
 		arrayMessages = target.getArrayMessages();
 		displayName = arrayMessages.get(0).getRequestHeader().getVersion() + " - " + arrayMessages.get(0).getRequestHeader().getHostName();
@@ -42,8 +44,7 @@ public class ByPassModule implements GenericScanner2{
 		byPassThread = new ByPassThread(cookies, cookieArray, target.getTarget(), arrayMessages, extension, ByPassModule.this);
 		executor = Executors.newFixedThreadPool(1);
 	}
-	
-
+	    
     public void deleteResource(){
     	if(resources != null){
     		for(HttpMessage message:arrayMessages){
