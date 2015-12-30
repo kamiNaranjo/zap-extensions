@@ -21,7 +21,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.ResourceBundle;
 
 import org.parosproxy.paros.Constant;
 import org.parosproxy.paros.extension.ExtensionAdaptor;
@@ -36,7 +35,9 @@ import org.zaproxy.zap.users.User;
 
 public class ExtensionByPass extends ExtensionAdaptor implements ScanController<ByPassModule>{
 
-    private static ResourceBundle messages;
+	protected static final String PREFIX = "byPass";
+	public static final String NAME = "ExtensionByPass";
+  //  private static ResourceBundle messages;
     private ByPassPanel byPassPanel = null;
     private ByPassScanController scanController = null;
     private List<String> cookiesSelected;
@@ -55,9 +56,9 @@ public class ExtensionByPass extends ExtensionAdaptor implements ScanController<
 	private void initialize() {
 		cookiesSelected = new ArrayList<>();
 		resourcesSelected = new ArrayList<>();
-        this.setName("ExtensionByPass");
+        this.setName(NAME);
         this.scanController = new ByPassScanController(this);
-        messages = ResourceBundle.getBundle(this.getClass().getPackage().getName() + ".resources.Messages", Constant.getLocale());
+     //   messages = ResourceBundle.getBundle(this.getClass().getPackage().getName() + ".resources.Messages", Constant.getLocale());
 	}
 	
 	@Override
@@ -80,7 +81,7 @@ public class ExtensionByPass extends ExtensionAdaptor implements ScanController<
 	}
 	
 	public static String getMessageString (String key) {
-		return messages.getString(key);
+		return Constant.messages.getString(PREFIX + "." + key);
 	}
 	
 	 @Override
@@ -96,7 +97,7 @@ public class ExtensionByPass extends ExtensionAdaptor implements ScanController<
 
 	@Override
 	public String getDescription() {
-		return messages.getString("ext.topmenu.desc");
+		return Constant.messages.getString(PREFIX + ".ext.topmenu.desc");
 	}
 
 	@Override
