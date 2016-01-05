@@ -26,7 +26,14 @@ import org.parosproxy.paros.Constant;
 import org.parosproxy.paros.extension.ExtensionAdaptor;
 import org.parosproxy.paros.extension.ExtensionHook;
 import org.parosproxy.paros.extension.ViewDelegate;
+import org.parosproxy.paros.extension.manualrequest.ManualRequestEditorDialog;
+import org.parosproxy.paros.extension.manualrequest.http.impl.ManualHttpRequestEditorDialog;
+import org.parosproxy.paros.network.HttpMessage;
 import org.parosproxy.paros.view.View;
+import org.zaproxy.zap.extension.byPass.popup.PopupMenuCopyUrls;
+import org.zaproxy.zap.extension.byPass.popup.PopupMenuEmbeddedBrowser;
+import org.zaproxy.zap.extension.byPass.popup.PopupMenuGenerateForm;
+import org.zaproxy.zap.extension.byPass.popup.PopupMenuResend;
 import org.zaproxy.zap.extension.byPass.ui.ByPassTableModel;
 import org.zaproxy.zap.extension.byPass.ui.MainInterfaceByPass;
 import org.zaproxy.zap.model.ScanController;
@@ -37,12 +44,16 @@ public class ExtensionByPass extends ExtensionAdaptor implements ScanController<
 
 	protected static final String PREFIX = "byPass";
 	public static final String NAME = "ExtensionByPass";
-  //  private static ResourceBundle messages;
     private ByPassPanel byPassPanel = null;
     private ByPassScanController scanController = null;
     private List<String> cookiesSelected;
     private List<String> resourcesSelected;
     private TargetByPass targetByPass = null;
+	private PopupMenuResend popupMenuResend = null;
+	private PopupMenuEmbeddedBrowser popupMenuBrowser = null;
+	private PopupMenuCopyUrls popupMenuCopy = null;
+	private ManualRequestEditorDialog resendDialog = null;
+	private PopupMenuGenerateForm popupMenuGenerateForm = null;
 
     public ExtensionByPass() {
         super();
@@ -58,17 +69,70 @@ public class ExtensionByPass extends ExtensionAdaptor implements ScanController<
 		resourcesSelected = new ArrayList<>();
         this.setName(NAME);
         this.scanController = new ByPassScanController(this);
-     //   messages = ResourceBundle.getBundle(this.getClass().getPackage().getName() + ".resources.Messages", Constant.getLocale());
 	}
 	
 	@Override
 	public void hook(ExtensionHook extensionHook) {
 	    super.hook(extensionHook);
 	    if (getView() != null) {
+	    	extensionHook.getHookMenu().addPopupMenuItem(getPopupMenuResend());
+	    	extensionHook.getHookMenu().addPopupMenuItem(getPopupMenuEmbeddedBrowser());
+	    	extensionHook.getHookMenu().addPopupMenuItem(getPopupMenuCopyUrls());
+	    	extensionHook.getHookMenu().addPopupMenuItem(getPopupMenuGenerateForm());
 	        extensionHook.getHookView().addStatusPanel(getByPassPanel());
 	    }
 	}
-		
+	
+	private PopupMenuResend getPopupMenuResend() {
+		if(popupMenuResend == null){
+			popupMenuResend = new PopupMenuResend();
+			popupMenuResend.setExtension(this);
+		}
+		return popupMenuResend;
+	}
+	
+	private PopupMenuEmbeddedBrowser getPopupMenuEmbeddedBrowser() {
+		if(popupMenuBrowser == null){
+			popupMenuBrowser = new PopupMenuEmbeddedBrowser();
+			popupMenuBrowser.setExtension(this);
+		}
+		return popupMenuBrowser;
+	}
+	
+	private PopupMenuCopyUrls getPopupMenuCopyUrls() {
+		if (popupMenuCopy == null) {
+			popupMenuCopy = new PopupMenuCopyUrls();
+			popupMenuCopy.setExtension(this);
+		}
+		return popupMenuCopy;
+	}
+
+	public ManualRequestEditorDialog getResendDialog() {
+		if (resendDialog == null) {
+			resendDialog = new ManualHttpRequestEditorDialog(true, "resend", "ui.dialogs.resend");
+			resendDialog.setTitle(Constant.messages.getString("manReq.resend.popup"));	// ZAP: i18n
+		}
+		return resendDialog;
+	}
+	
+	private PopupMenuGenerateForm getPopupMenuGenerateForm() {
+		if (popupMenuGenerateForm == null) {
+			popupMenuGenerateForm = new PopupMenuGenerateForm();
+			popupMenuGenerateForm.setExtension(this);
+		}
+		return popupMenuGenerateForm;
+	}
+	
+	
+	public HttpMessage messageSelected(){
+		return byPassPanel.getSelectedMessage();
+	}
+	
+	public List<HttpMessage> messagesSelected(){
+		return byPassPanel.getSelectedMessages();
+	}
+	
+	
 	public ByPassPanel getByPassPanel(){
 		if(byPassPanel == null){
 			byPassPanel = new ByPassPanel(this);

@@ -73,6 +73,7 @@ import org.zaproxy.zap.users.User;
 			}
 			urlWithOutCookie = new HttpMessage(message.getRequestHeader(), message.getRequestBody());
 			urlWithOutCookie.setCookieParams(cookieParam);
+			urlWithOutCookie.setHistoryRef(message.getHistoryRef());
 			urlWithOutCookie.getRequestHeader().setCookieParams(cookieParam);
 			HttpMessage response = sendMessageWithOutCookies(urlWithOutCookie);
 			urlWithOutCookie.getRequestHeader().setCookies(cookiesHTTP);

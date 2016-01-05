@@ -5,11 +5,15 @@ import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JToolBar;
+import javax.swing.SortOrder;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
@@ -28,7 +32,7 @@ public class ByPassPanel extends ScanPanel2<ByPassModule, ScanController<ByPassM
 	private JScrollPane workPane;
 	private ExtensionByPass extension = null;
 	private static final ByPassTableModel EMPTY_RESULTS_MODEL = new ByPassTableModel();
-	
+
 	public ByPassPanel(ExtensionByPass extensionByPass) {
 		super("spider", ByPassUtils.BYPASS_ICON, extensionByPass, null);
 		super.setName(ExtensionByPass.getMessageString("title.windows.ByPass"));
@@ -46,10 +50,7 @@ public class ByPassPanel extends ScanPanel2<ByPassModule, ScanController<ByPassM
 		}
 		return workPane;
 	}
-	
-	/**
-	 * Sets the spider results table column sizes.
-	 */
+
 	private void setScanResultsTableColumnSizes() {
 		//Method
 		resultsTable.getColumnModel().getColumn(0).setMinWidth(40);
@@ -80,14 +81,19 @@ public class ByPassPanel extends ScanPanel2<ByPassModule, ScanController<ByPassM
 	private JXTable getScanResultsTable() {
 		if (resultsTable == null) {
 			resultsTable = new ZapTable(EMPTY_RESULTS_MODEL);
+			
 			resultsTable.setColumnSelectionAllowed(false);
 			resultsTable.setCellSelectionEnabled(false);
 			resultsTable.setRowSelectionAllowed(true);
 			resultsTable.setAutoCreateRowSorter(true);
+			
 			this.setScanResultsTableColumnSizes();
+			
 			resultsTable.setName("ByPasssResult");
+			
 			resultsTable.setDoubleBuffered(true);
-			resultsTable.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);			
+			resultsTable.setSelectionMode(javax.swing.ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+			resultsTable.setSortOrderCycle(SortOrder.ASCENDING, SortOrder.DESCENDING, SortOrder.UNSORTED);
 			resultsTable.setComponentPopupMenu(new JPopupMenu() {
 				private static final long serialVersionUID = 6608291059686282641L;
 				@Override
@@ -96,21 +102,40 @@ public class ByPassPanel extends ScanPanel2<ByPassModule, ScanController<ByPassM
 				}
 			});
 			resultsTable.getSelectionModel().addListSelectionListener(
-				new ListSelectionListener() {
-					@Override
-					public void valueChanged(final ListSelectionEvent evt) {
-						if (!evt.getValueIsAdjusting()) {
-							HttpMessage message = getSelectedMessage();
-							if (message != null) {
-								displayMessageInHttpPanel(message);
+					new ListSelectionListener() {
+						@Override
+						public void valueChanged(final ListSelectionEvent evt) {
+							if (!evt.getValueIsAdjusting()) {
+								HttpMessage message = getSelectedMessage();
+								if (message != null) {
+									displayMessageInHttpPanel(message);
+							}
 						}
 					}
-				}
-			});
+				});
+			
+			/*resultsTable.addMouseListener(new java.awt.event.MouseAdapter() { 
+			    @Override
+			    public void mousePressed(java.awt.event.MouseEvent e) {
+					if (SwingUtilities.isRightMouseButton(e)) {
+						// Select table item
+					    int row = resultsTable.rowAtPoint( e.getPoint() );
+					    if ( row < 0 || !resultsTable.getSelectionModel().isSelectedIndex( row ) ) {
+					    	resultsTable.getSelectionModel().clearSelection();
+					    	/*if ( row >= 0 ) {
+					    		resultsTable.getSelectionModel().setSelectionInterval( row, row );
+					    	}
+					    }else {
+				    		resultsTable.getSelectionModel().setSelectionInterval( row, row );
+					    	View.getSingleton().getPopupMenu().show(e.getComponent(), e.getX(), e.getY());
+					    }
+			        }
+			    }
+			});*/
 		}
 		return resultsTable;
 	}
-
+	
 	@Override
 	protected int addToolBarElements(JToolBar toolBar, Location location, int gridX) {
 		getStopScanButton().setToolTipText(ExtensionByPass.getMessageString("tool.tip.stop.button"));
@@ -127,6 +152,14 @@ public class ByPassPanel extends ScanPanel2<ByPassModule, ScanController<ByPassM
 		} else {
 			this.getScanResultsTable().setModel(EMPTY_RESULTS_MODEL);
 		}
+	}
+	
+	public boolean isMultipleSelected(){
+		final int[] selectedRow = this.resultsTable.getSelectedRows();
+		if(selectedRow.length > 1){
+			return true;
+		}
+		return false;
 	}
 	
 	@Override
@@ -163,10 +196,23 @@ public class ByPassPanel extends ScanPanel2<ByPassModule, ScanController<ByPassM
 	}
 	
 	public HttpMessage getSelectedMessage() {
-		final int selectedRow = resultsTable.getSelectedRow();
-		ByPassTableModel model = (ByPassTableModel)resultsTable.getModel();
+		final int selectedRow = this.resultsTable.getSelectedRow();
+		ByPassTableModel model = (ByPassTableModel)this.resultsTable.getModel();
 		if (selectedRow != -1 && model != null) {
 			return model.getMessageAtIndex(selectedRow);
+		}
+		return null;
+	}
+	
+	public List<HttpMessage> getSelectedMessages() {
+		List<HttpMessage> message = new ArrayList<>();
+		final int[] selectedRow = this.resultsTable.getSelectedRows();
+		ByPassTableModel model = (ByPassTableModel)resultsTable.getModel();
+		if(selectedRow.length > 0){
+			for(int i: selectedRow){
+				message.add(model.getMessageAtIndex(i));
+			}
+			return message;
 		}
 		return null;
 	}
